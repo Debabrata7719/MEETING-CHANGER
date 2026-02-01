@@ -1,32 +1,43 @@
-# 🎙️ Meeting Changer – Video to Text
+# 🎙️ Meeting Changer – Video to AI Q&A Bot
 
-A simple Python project that converts a video into text automatically.
+Convert a meeting video into text and chat with it using AI.
 
-## What it does
+## 🚀 Pipeline
+
 Video (.mp4)
 → Audio (FFmpeg)
-→ Text transcript (OpenAI Whisper)
+→ Transcript (Whisper)
+→ Text Chunks (LangChain)
+→ Embeddings
+→ Vector DB (ChromaDB)
+→ Ask Questions (RAG Chatbot)
 
-Basically: **Video → Audio → Text**
+## 🛠️ Tech Stack
+Python • FFmpeg • Whisper • LangChain • SentenceTransformers • ChromaDB
 
-## Tools used
-- FFmpeg (audio extraction + cleaning)
-- OpenAI Whisper (speech-to-text)
-- Python
+## 📂 Structure
 
-## How to run
+src/
+- video_to_audio.py
+- audio_to_text.py
+- chunk_text.py
+- embed_store.py
+- chat.py
+- pipeline.py
 
-1. Install packages
+data/
+- input/
+- intermediate/
+- vectordb/
+
+## ▶️ Run
+
+Install:
+```bash
 pip install -r requirements.txt
 
-2. Convert video to audio
-python video_to_audio/convert_video_to_audio.py
+Process video:
+python src/pipeline.py
 
-3. Convert audio to text
-python audio_to_text/transcribe.py
-
-## Output
-audio_to_text/transcript.txt
-
-## Purpose
-Built to convert meeting/lecture recordings into searchable notes.
+Chat with meeting:
+python src/chat.py
