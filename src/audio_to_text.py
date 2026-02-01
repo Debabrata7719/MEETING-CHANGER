@@ -2,24 +2,26 @@ import whisper
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-audio_path = os.path.join(BASE_DIR, "data", "intermediate", "clean_meeting_audio.wav")
-output_folder = os.path.join(BASE_DIR, "data", "intermediate")
 
-os.makedirs(output_folder, exist_ok=True)
-
+# load model only once (fast)
 model = whisper.load_model("small")
 
-# PASS THE AUDIO FILE FROM THE FOLDER
-result = model.transcribe(audio_path)
 
+def audio_to_text(audio_path):
 
-output_file = os.path.join(output_folder, "transcript.txt")
+    output_folder = os.path.join(BASE_DIR, "data", "intermediate")
+    os.makedirs(output_folder, exist_ok=True)
 
-segments = result["segments"]
+    result = model.transcribe(audio_path)
 
-with open(output_file, "w", encoding="utf-8") as f:
-    for seg in segments:
-        f.write(seg["text"].strip() + "\n")
+    output_file = os.path.join(output_folder, "transcript.txt")
 
+    segments = result["segments"]
 
-print(f"Transcript saved at {output_file}")
+    with open(output_file, "w", encoding="utf-8") as f:
+        for seg in segments:
+            f.write(seg["text"].strip() + "\n")
+
+    print(f"Transcript saved at {output_file}")
+
+    return output_file   # 🔥 VERY IMPORTANT

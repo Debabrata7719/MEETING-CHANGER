@@ -42,12 +42,12 @@ total_docs = collection.count()
 # For small transcripts (≤10 chunks), retrieve all for full context
 if total_docs <= 10 and total_docs > 0:
     retriever = db.as_retriever(search_kwargs={"k": total_docs})
-    print(f"📝 Small transcript detected ({total_docs} chunks) - using FULL context mode")
+    print(f" Small transcript detected ({total_docs} chunks) - using FULL context mode")
 elif total_docs > 10:
     retriever = db.as_retriever(search_kwargs={"k": 5})
-    print(f"📚 Large transcript ({total_docs} chunks) - using retrieval mode (top 5)")
+    print(f"Large transcript ({total_docs} chunks) - using retrieval mode (top 5)")
 else:
-    print("❌ ERROR: No chunks found in VectorDB! Run embedding_and_store.py first.")
+    print("ERROR: No chunks found in VectorDB! Run embedding_and_store.py first.")
     exit(1)
 
 
@@ -94,7 +94,7 @@ qa_chain = RetrievalQA.from_chain_type(
 # =========================
 # STEP 6 — Chat loop
 # =========================
-print("\n🔥 Chat with your meeting (type 'exit' to stop)\n")
+print("\n Chat with your meeting (type 'exit' to stop)\n")
 
 while True:
     query = input("You: ")
@@ -104,4 +104,4 @@ while True:
 
     result = qa_chain.invoke({"query": query})
 
-    print("\nAI:", result["result"], "\n")
+    print("\nllm:", result["result"], "\n")
