@@ -1,0 +1,17 @@
+# Core ML/AI (Audio & Embeddings)
+openai-whisper
+sentence-transformers
+torch
+
+# Vector Database
+chromadb
+
+# LangChain Ecosystem
+langchain
+langchain-classic
+langchain-community
+langchain-text-splitters
+langchain-groq
+
+# Configuration
+python-dotenv
