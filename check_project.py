@@ -1,8 +1,12 @@
 import chromadb
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+db_path = os.path.join(BASE_DIR, "data", "vectordb")
 
 client = chromadb.Client(
     settings=chromadb.Settings(
-        persist_directory="vectordb",
+        persist_directory=db_path,
         is_persistent=True
     )
 )

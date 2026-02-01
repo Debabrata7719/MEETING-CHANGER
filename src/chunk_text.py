@@ -3,8 +3,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 
-input_file = "audio_to_text/Converted Audio To Text.txt"
-output_folder = "Text_to_chunks"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+input_file = os.path.join(BASE_DIR, "data", "intermediate", "transcript.txt")
+output_folder = os.path.join(BASE_DIR, "data", "intermediate")
 output_file = "chunks.txt"
 
 

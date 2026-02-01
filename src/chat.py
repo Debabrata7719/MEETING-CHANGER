@@ -23,8 +23,10 @@ embedding = SentenceTransformerEmbeddings(
 # =========================
 # STEP 2 — Load Chroma DB (with correct collection name)
 # =========================
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+db_path = os.path.join(BASE_DIR, "data", "vectordb")
 db = Chroma(
-    persist_directory="vectordb",
+    persist_directory=db_path,
     embedding_function=embedding,
     collection_name="meeting_chunks"  # Must match the collection used in embedding_and_store.py
 )

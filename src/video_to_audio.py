@@ -1,8 +1,9 @@
 import subprocess
 import os
 
-video_path = "meeting.mp4"
-output_folder = "video_to_audio"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+video_path = os.path.join(BASE_DIR, "data", "input", "meeting.mp4")
+output_folder = os.path.join(BASE_DIR, "data", "intermediate")
 clean_audio_name = "clean_meeting_audio.wav"
 
 

@@ -1,8 +1,9 @@
 import whisper
 import os
 
-audio_path = "video_to_audio/clean_meeting_audio.wav"   # real audio file
-output_folder = "audio_to_text"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+audio_path = os.path.join(BASE_DIR, "data", "intermediate", "clean_meeting_audio.wav")
+output_folder = os.path.join(BASE_DIR, "data", "intermediate")
 
 os.makedirs(output_folder, exist_ok=True)
 
@@ -12,7 +13,7 @@ model = whisper.load_model("small")
 result = model.transcribe(audio_path)
 
 
-output_file = os.path.join(output_folder, "Converted Audio To Text.txt")
+output_file = os.path.join(output_folder, "transcript.txt")
 
 segments = result["segments"]
 

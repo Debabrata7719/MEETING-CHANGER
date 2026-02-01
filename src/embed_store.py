@@ -2,8 +2,9 @@ import os
 import chromadb
 from sentence_transformers import SentenceTransformer
 
-chunks_file = "Text_to_chunks/chunks.txt"
-db_folder = "vectordb"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+chunks_file = os.path.join(BASE_DIR, "data", "intermediate", "chunks.txt")
+db_folder = os.path.join(BASE_DIR, "data", "vectordb")
 collection_name = "meeting_chunks"
 
 
