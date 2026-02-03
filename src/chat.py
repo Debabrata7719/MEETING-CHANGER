@@ -1,88 +1,85 @@
-#LOAD ENV
+# ===============================
+# LOAD ENV
+# ===============================
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 
-load_dotenv()  
+load_dotenv()
 
 
-#IMPORTS
+# ===============================
+# IMPORTS
+# ===============================
 from langchain_groq import ChatGroq
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_classic.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
 
 
+# ===============================
+# PATH SETUP (robust)
+# ===============================
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "data" / "vectordb"
 
-# STEP 1 — Embedding model
 
+# ===============================
+# EMBEDDING (load once → faster)
+# ===============================
 embedding = SentenceTransformerEmbeddings(
     model_name="all-MiniLM-L6-v2"
 )
 
 
-# =========================
-# STEP 2 — Load Chroma DB (with correct collection name)
-# =========================
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-db_path = os.path.join(BASE_DIR, "data", "vectordb")
+# ===============================
+# VECTOR DB
+# ===============================
 db = Chroma(
-    persist_directory=db_path,
+    persist_directory=str(DB_PATH),
     embedding_function=embedding,
-    collection_name="meeting_chunks"  # Must match the collection used in embedding_and_store.py
+    collection_name="meeting_chunks"
 )
 
-
-# =========================
-# STEP 3 — Create Retriever
-# =========================
-# Get total document count for smart handling
-collection = db._collection
-total_docs = collection.count()
-
-# For small transcripts (≤10 chunks), retrieve all for full context
-if total_docs <= 10 and total_docs > 0:
-    retriever = db.as_retriever(search_kwargs={"k": total_docs})
-    print(f" Small transcript detected ({total_docs} chunks) - using FULL context mode")
-elif total_docs > 10:
-    retriever = db.as_retriever(search_kwargs={"k": 5})
-    print(f"Large transcript ({total_docs} chunks) - using retrieval mode (top 5)")
-else:
-    print("ERROR: No chunks found in VectorDB! Run embedding_and_store.py first.")
-    exit(1)
+retriever = db.as_retriever(search_kwargs={"k": 5})
 
 
-# =========================
-# STEP 4 — Load Groq LLM
-# =========================
+# ===============================
+# LLM
+# ===============================
 llm = ChatGroq(
-    model_name="openai/gpt-oss-120b",  # fast + good
+    model_name="openai/gpt-oss-120b",
     temperature=0
 )
 
 
-# =========================
-# STEP 5 — RetrievalQA Chain
-# =========================
-from langchain_core.prompts import PromptTemplate
-
+# ===============================
+# PROMPT
+# ===============================
 template = """
-Answer the question based strictly on the context below. 
-Keep your answer CONCISE, SHORT, and to the point (max 2-3 sentences).
+Answer ONLY using context.
+
+Rules:
+- Do not guess
+- If not found say: "Not found in the meeting transcript"
 
 Context:
 {context}
 
-Question: 
+Question:
 {question}
-
-Answer:
 """
 
 prompt = PromptTemplate(
-    template=template, 
+    template=template,
     input_variables=["context", "question"]
 )
 
+
+# ===============================
+# QA CHAIN
+# ===============================
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
@@ -91,17 +88,18 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 
-# =========================
-# STEP 6 — Chat loop
-# =========================
-print("\n Chat with your meeting (type 'exit' to stop)\n")
+# ===============================
+# MAIN FUNCTION (API safe)
+# ===============================
+def ask_question(query: str) -> str:
+    """
+    Called by FastAPI.
+    Returns answer string.
+    """
 
-while True:
-    query = input("You: ")
-
-    if query.lower() == "exit":
-        break
+    if not query.strip():
+        return "Please ask a valid question."
 
     result = qa_chain.invoke({"query": query})
 
-    print("\nllm:", result["result"], "\n")
+    return result["result"]
