@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meeting Intelligence System</title>
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="script.js"></script>
+</head>
+<body>
+
+  <!-- ========================= -->
+  <!-- 🔥 GLOBAL LOADER (NEW) -->
+  <!-- ========================= -->
+  <div id="loaderOverlay" class="loader-overlay hidden">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <p id="loaderText">Processing...</p>
+    </div>
+  </div>
+  <!-- ========================= -->
+
+
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Meeting Intelligence System</p>
+      <h1>Turn meetings into answers.</h1>
+      <p class="subtitle">Upload a meeting, generate highlights, then chat with the transcript.</p>
+    </div>
+    <div class="status-pill" id="apiStatus">
+      <span class="dot"></span>
+      <span>API: Ready</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card upload-card">
+      <div class="card-header">
+        <h2>Upload Meeting</h2>
+        <p>Supported formats: mp4, mp3, wav</p>
+      </div>
+
+      <div class="dropzone" id="dropZone" tabindex="0" role="button" aria-label="Upload meeting file">
+        <input type="file" id="fileInput" accept=".mp4,.mp3,.wav" />
+        <div class="drop-content">
+          <p class="drop-title">Drop a file here</p>
+          <p class="drop-sub">or click to browse</p>
+        </div>
+      </div>
+
+      <button class="btn primary" id="uploadBtn" type="button">
+        <span class="btn-label">Upload and Process</span>
+        <span class="btn-spinner" aria-hidden="true"></span>
+      </button>
+
+      <p class="status muted" id="uploadStatus" aria-live="polite">No file selected.</p>
+    </section>
+
+    <section class="card notes-card">
+      <div class="card-header">
+        <h2>Highlights</h2>
+        <p>Generate structured notes from the meeting.</p>
+      </div>
+
+      <button class="btn" id="notesBtn" type="button" disabled>
+        <span class="btn-label">Generate Highlights</span>
+        <span class="btn-spinner" aria-hidden="true"></span>
+      </button>
+
+      <div class="notes-output" id="notesOutput" aria-live="polite">
+        Your highlights will appear here.
+      </div>
+    </section>
+
+    <section class="card chat-card">
+      <div class="card-header">
+        <h2>Chat</h2>
+        <p>Ask questions and get answers from the transcript.</p>
+      </div>
+
+      <div class="chat-messages" id="chatMessages" aria-live="polite">
+        <div class="message assistant">Upload a meeting to start chatting.</div>
+      </div>
+
+      <form class="chat-input" id="chatForm">
+        <input
+          type="text"
+          id="chatInput"
+          placeholder="Ask a question about the meeting..."
+          autocomplete="off"
+          required
+          disabled
+        />
+        <button class="btn primary" id="sendBtn" type="submit" disabled>
+          <span class="btn-label">Send</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

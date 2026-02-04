@@ -1,17 +1,24 @@
-# Core ML/AI (Audio & Embeddings)
+# Backend API
+fastapi
+uvicorn
+
+# Core ML / AI
 openai-whisper
 sentence-transformers
 torch
 
-# Vector Database
-chromadb
+# Vector DB
+langchain-chroma
 
-# LangChain Ecosystem
+# LangChain ecosystem
 langchain
 langchain-classic
 langchain-community
 langchain-text-splitters
 langchain-groq
 
-# Configuration
+# Config
 python-dotenv
+
+# Optional (safe for whisper/ffmpeg)
+ffmpeg-python

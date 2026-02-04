@@ -1,43 +1,72 @@
-# 🎙️ Meeting Changer – Video to AI Q&A Bot
+# 🎯 Meeting Intelligence System
 
-Convert a meeting video into text and chat with it using AI.
+Convert meeting recordings into **highlights + answers + chat**.
 
-## 🚀 Pipeline
+Upload a meeting → get transcript → generate notes → ask questions.
 
-Video (.mp4)
-→ Audio (FFmpeg)
-→ Transcript (Whisper)
-→ Text Chunks (LangChain)
-→ Embeddings
-→ Vector DB (ChromaDB)
-→ Ask Questions (RAG Chatbot)
+Built with FastAPI + LangChain + Whisper + ChromaDB + Groq.
 
-## 🛠️ Tech Stack
-Python • FFmpeg • Whisper • LangChain • SentenceTransformers • ChromaDB
+---
 
-## 📂 Structure
+## 🚀 Features
 
-src/
-- video_to_audio.py
-- audio_to_text.py
-- chunk_text.py
-- embed_store.py
-- chat.py
-- pipeline.py
+- Upload mp4 / mp3 / wav
+- Speech → text (Whisper)
+- Vector search (ChromaDB)
+- AI highlights (on demand)
+- Chat with your meeting
+- Clean dashboard UI
 
-data/
-- input/
-- intermediate/
-- vectordb/
+---
 
-## ▶️ Run
+## 🏗️ Tech Stack
 
-Install:
+Backend: FastAPI  
+AI: Whisper, LangChain, SentenceTransformers, Groq  
+DB: Chroma Vector DB  
+Frontend: HTML, CSS, JS  
+
+---
+
+## ⚙️ Workflow
+
+Video → Audio → Transcript → Chunks → Embeddings → Vector DB
+
+
+- `/upload` → process meeting  
+- `/notes` → generate highlights  
+- `/chat` → ask questions  
+
+Highlights run **only when requested** (not during upload).
+
+---
+
+## 🛠️ Setup
+
 ```bash
+git clone <repo>
+cd meeting-intelligence
+python -m venv venv
 pip install -r requirements.txt
+Create .env
 
-Process video:
-python src/pipeline.py
+GROQ_API_KEY=your_key
+Run backend:
 
-Chat with meeting:
-python src/chat.py
+uvicorn main:app --reload
+Open frontend:
+
+index.html
+or
+
+python -m http.server 5500
+Problems faced ----------
+Highlights auto-running during upload → separated into /notes
+
+Chroma import errors → switched to langchain-chroma
+
+File upload issues → installed python-multipart
+
+Chat UI layout fixes with CSS
+
+Learned a lot about building real-world RAG + FastAPI apps.

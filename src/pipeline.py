@@ -6,8 +6,11 @@ from src.video_to_audio import video_to_audio
 from src.audio_to_text import audio_to_text
 from src.chunk_text import chunk_text
 from src.embed_store import embed_store
-from src.highlights import extract_highlights
 
+
+# =================================
+# ONLY PREPROCESSING (NO LLM HERE)
+# =================================
 
 
 # 1️⃣ Video → Audio
@@ -41,34 +44,25 @@ embed_chain = TransformChain(
     transform=lambda x: {"db": embed_store(x["chunks"])}
 )
 
-# 5️⃣ VectorDB → Highlights
-highlight_chain = TransformChain(
-    input_variables=["db"],
-    output_variables=["highlights"],
-    transform=lambda x: {
-        "highlights": extract_highlights()
-    }
-)
 
+# =================================
+# PIPELINE (NO HIGHLIGHTS HERE)
+# =================================
 
-#  Combine all chains
 pipeline = SimpleSequentialChain(
     chains=[
         video_chain,
         audio_chain,
         chunk_chain,
-        embed_chain,
-        highlight_chain
+        embed_chain
     ],
     verbose=True
 )
 
-# wrapper for API
+
+# =================================
+# API wrapper
+# =================================
+
 def run_pipeline(video_path: str):
     return pipeline.run(video_path)
-
-
-
-# 6️⃣ Run
-if __name__ == "__main__":
-    run_pipeline("data/input/meeting.mp4")

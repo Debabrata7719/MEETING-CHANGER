@@ -1,0 +1,258 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-1: #f7f1e5;
+  --bg-2: #e2f1ea;
+  --card: #ffffff;
+  --text: #1c2d2b;
+  --muted: #5c6f6a;
+  --accent: #1f8a70;
+  --accent-2: #f4a261;
+  --border: #dfe7e2;
+  --shadow: 0 20px 45px rgba(17, 31, 27, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--text);
+  background: linear-gradient(140deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+  padding: 32px clamp(16px, 4vw, 48px) 64px;
+  overflow-x: hidden;
+}
+
+/* =========================
+   HEADINGS
+   ========================= */
+
+h1, h2 {
+  font-family: "Fraunces", serif;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+/* =========================
+   TOPBAR
+   ========================= */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 28px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.9);
+  box-shadow: var(--shadow);
+}
+
+/* =========================
+   LAYOUT
+   ========================= */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 24px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================
+   UPLOAD
+   ========================= */
+
+.dropzone {
+  border: 2px dashed #bcd6ce;
+  border-radius: 16px;
+  padding: 26px;
+  text-align: center;
+  background: #f8fcfa;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.dropzone:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), #2b9e85);
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* =========================
+   NOTES
+   ========================= */
+
+.notes-output {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  min-height: 160px;
+  background: #f9fbfa;
+  white-space: pre-line;
+}
+
+/* =========================
+   CHAT MESSAGES
+   ========================= */
+
+.chat-messages {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  height: 420px;
+  overflow-y: auto;
+  background: #f7faf8;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message {
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  background: white;
+  border: 1px solid var(--border);
+}
+
+.message.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: white;
+}
+
+/* =================================================
+   🔥🔥 MODERN CHAT INPUT (THIS FIXES YOUR PROBLEM)
+   ================================================= */
+
+/* =========================
+   FIXED CHAT INPUT
+   ========================= */
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  padding: 10px;
+
+  border-radius: 18px;
+  background: white;
+  border: 1px solid var(--border);
+
+  box-shadow: 0 8px 20px rgba(17,31,27,0.08);
+}
+
+/* very important */
+.chat-input input {
+  flex: 1;
+  min-width: 0;        /* 🔥 prevents overflow */
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  padding: 10px 12px;
+  background: transparent;
+}
+
+/* fixed width button */
+.chat-input .btn {
+  flex-shrink: 0;      /* 🔥 prevents shrinking */
+  width: 90px;
+  height: 42px;
+}
+
+
+/* =========================
+   FULLSCREEN LOADER
+   ========================= */
+
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,25,22,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader-overlay.hidden {
+  display: none;
+}
+
+.loader-box {
+  background: white;
+  padding: 28px 36px;
+  border-radius: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #dfe7e2;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
