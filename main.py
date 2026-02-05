@@ -13,7 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
-from src.recorder import start_recording, stop_recording   # ✅ NEW
+try:
+    from src.recorder import start_recording, stop_recording
+    RECORDER_AVAILABLE = True
+except Exception:
+    RECORDER_AVAILABLE = False
 
 
 # ===============================
@@ -86,6 +90,10 @@ async def root():
 async def start_rec():
     global stream
 
+    # 🔥 NEW: disable recording on cloud
+    if not RECORDER_AVAILABLE:
+        return {"message": "Recording not supported on cloud server"}
+
     try:
         stream = start_recording()
         return {"message": "Recording started"}
@@ -101,19 +109,17 @@ async def start_rec():
 async def stop_rec():
     global stream
 
-    if stream is None:
-        raise HTTPException(400, "Recording not started")
+    if not RECORDER_AVAILABLE:
+        return {"message": "Recording not supported on cloud server"}
 
     try:
-        audio_path = stop_recording(stream, "uploads/meeting.wav")
-
-        # run SAME pipeline you already use
+        audio_path = stop_recording(stream)
         await run_in_threadpool(process_meeting, str(audio_path))
 
         app.state.meeting_processed = True
         stream = None
 
-        return {"message": "Recording stopped & meeting processed"}
+        return {"message": "Recording stopped & processed"}
     except Exception:
         traceback.print_exc()
         raise HTTPException(500, "Recording processing failed")
