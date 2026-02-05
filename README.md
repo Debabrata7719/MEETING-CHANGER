@@ -1,4 +1,4 @@
-# 🎯 Meeting Intelligence System
+# Meeting Intelligence System
 
 Convert meeting recordings into **highlights + answers + chat**.
 
@@ -8,7 +8,7 @@ Built with FastAPI + LangChain + Whisper + ChromaDB + Groq.
 
 ---
 
-## 🚀 Features
+##  Features
 
 - Upload mp4 / mp3 / wav
 - Speech → text (Whisper)
@@ -19,7 +19,7 @@ Built with FastAPI + LangChain + Whisper + ChromaDB + Groq.
 
 ---
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 Backend: FastAPI  
 AI: Whisper, LangChain, SentenceTransformers, Groq  
@@ -28,7 +28,7 @@ Frontend: HTML, CSS, JS
 
 ---
 
-## ⚙️ Workflow
+## Workflow
 
 Video → Audio → Transcript → Chunks → Embeddings → Vector DB
 
@@ -41,7 +41,7 @@ Highlights run **only when requested** (not during upload).
 
 ---
 
-## 🛠️ Setup
+## Setup
 
 ```bash
 git clone <repo>
@@ -70,3 +70,6 @@ File upload issues → installed python-multipart
 Chat UI layout fixes with CSS
 
 Learned a lot about building real-world RAG + FastAPI apps.
+
+
+add Ci pipeline 
