@@ -8,10 +8,12 @@ from uuid import uuid4
 import traceback
 import importlib
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
+
+from src.recorder import start_recording, stop_recording   # ✅ NEW
 
 
 # ===============================
@@ -57,6 +59,12 @@ ALLOWED_EXTENSIONS = {".mp4", ".mp3", ".wav"}
 
 
 # ===============================
+# 🔥 NEW: recording stream holder
+# ===============================
+stream = None
+
+
+# ===============================
 # Models
 # ===============================
 class ChatRequest(BaseModel):
@@ -71,8 +79,48 @@ async def root():
     return {"message": "API running"}
 
 
+# ------------------------------------------------
+# 🔥 NEW: Start recording
+# ------------------------------------------------
+@app.post("/start-recording")
+async def start_rec():
+    global stream
+
+    try:
+        stream = start_recording()
+        return {"message": "Recording started"}
+    except Exception:
+        traceback.print_exc()
+        raise HTTPException(500, "Recording failed to start")
+
+
+# ------------------------------------------------
+# 🔥 NEW: Stop recording + process automatically
+# ------------------------------------------------
+@app.post("/stop-recording")
+async def stop_rec():
+    global stream
+
+    if stream is None:
+        raise HTTPException(400, "Recording not started")
+
+    try:
+        audio_path = stop_recording(stream, "uploads/meeting.wav")
+
+        # run SAME pipeline you already use
+        await run_in_threadpool(process_meeting, str(audio_path))
+
+        app.state.meeting_processed = True
+        stream = None
+
+        return {"message": "Recording stopped & meeting processed"}
+    except Exception:
+        traceback.print_exc()
+        raise HTTPException(500, "Recording processing failed")
+
+
 # -------------------------------
-# Upload + process
+# Upload + process (OLD METHOD still works)
 # -------------------------------
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
@@ -83,7 +131,6 @@ async def upload(file: UploadFile = File(...)):
 
     file_path = UPLOAD_DIR / f"{uuid4().hex}{ext}"
 
-    # safer streaming write (large files friendly)
     try:
         with open(file_path, "wb") as f:
             while chunk := await file.read(1024 * 1024):
@@ -92,12 +139,10 @@ async def upload(file: UploadFile = File(...)):
         traceback.print_exc()
         raise HTTPException(500, "Failed to save file")
 
-    # run pipeline
     try:
         await run_in_threadpool(process_meeting, str(file_path))
     except Exception:
-        print("\n========= REAL PIPELINE ERROR =========")
-        traceback.print_exc()   # ⭐ full error here
+        traceback.print_exc()
         raise HTTPException(500, "Pipeline crashed. Check terminal.")
 
     app.state.meeting_processed = True
@@ -112,7 +157,7 @@ async def upload(file: UploadFile = File(...)):
 async def notes():
 
     if not app.state.meeting_processed:
-        raise HTTPException(400, "Upload meeting first")
+        raise HTTPException(400, "Upload/Record meeting first")
 
     try:
         result = await run_in_threadpool(generate_notes)
@@ -129,7 +174,7 @@ async def notes():
 async def chat(payload: ChatRequest):
 
     if not app.state.meeting_processed:
-        raise HTTPException(400, "Upload meeting first")
+        raise HTTPException(400, "Upload/Record meeting first")
 
     try:
         answer = await run_in_threadpool(ask_question, payload.question)

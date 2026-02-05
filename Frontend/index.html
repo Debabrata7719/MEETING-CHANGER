@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meeting Intelligence System</title>
+
   <link rel="stylesheet" href="style.css" />
   <script defer src="script.js"></script>
 </head>
+
 <body>
 
   <!-- ========================= -->
-  <!-- 🔥 GLOBAL LOADER (NEW) -->
+  <!-- GLOBAL LOADER -->
   <!-- ========================= -->
   <div id="loaderOverlay" class="loader-overlay hidden">
     <div class="loader-box">
@@ -18,33 +20,73 @@
       <p id="loaderText">Processing...</p>
     </div>
   </div>
+
+
+  <!-- Background visuals -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-grid"></div>
+
+
   <!-- ========================= -->
-
-
-  <div class="bg-orb orb-1" aria-hidden="true"></div>
-  <div class="bg-orb orb-2" aria-hidden="true"></div>
-  <div class="bg-grid" aria-hidden="true"></div>
-
+  <!-- Header -->
+  <!-- ========================= -->
   <header class="topbar">
     <div>
       <p class="eyebrow">Meeting Intelligence System</p>
       <h1>Turn meetings into answers.</h1>
-      <p class="subtitle">Upload a meeting, generate highlights, then chat with the transcript.</p>
+      <p class="subtitle">
+        Upload a meeting OR record live audio, then generate highlights and chat.
+      </p>
     </div>
+
     <div class="status-pill" id="apiStatus">
       <span class="dot"></span>
       <span>API: Ready</span>
     </div>
   </header>
 
+
+  <!-- ========================= -->
+  <!-- Main Layout -->
+  <!-- ========================= -->
   <main class="layout">
+
+
+    <!-- ===================================== -->
+    <!-- 🔥 LIVE RECORDING CARD (NEW) -->
+    <!-- ===================================== -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Live Recording</h2>
+        <p>Record meeting audio directly from your microphone.</p>
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button class="btn primary" onclick="startRecording()">
+          🎤 Start Recording
+        </button>
+
+        <button class="btn" onclick="stopRecording()">
+          ⏹ Stop Recording
+        </button>
+
+        <span id="recStatus" class="status muted">Status: Idle</span>
+      </div>
+    </section>
+    <!-- ===================================== -->
+
+
+    <!-- ========================= -->
+    <!-- Upload Meeting -->
+    <!-- ========================= -->
     <section class="card upload-card">
       <div class="card-header">
         <h2>Upload Meeting</h2>
         <p>Supported formats: mp4, mp3, wav</p>
       </div>
 
-      <div class="dropzone" id="dropZone" tabindex="0" role="button" aria-label="Upload meeting file">
+      <div class="dropzone" id="dropZone" tabindex="0">
         <input type="file" id="fileInput" accept=".mp4,.mp3,.wav" />
         <div class="drop-content">
           <p class="drop-title">Drop a file here</p>
@@ -54,12 +96,16 @@
 
       <button class="btn primary" id="uploadBtn" type="button">
         <span class="btn-label">Upload and Process</span>
-        <span class="btn-spinner" aria-hidden="true"></span>
+        <span class="btn-spinner"></span>
       </button>
 
-      <p class="status muted" id="uploadStatus" aria-live="polite">No file selected.</p>
+      <p class="status muted" id="uploadStatus">No file selected.</p>
     </section>
 
+
+    <!-- ========================= -->
+    <!-- Highlights -->
+    <!-- ========================= -->
     <section class="card notes-card">
       <div class="card-header">
         <h2>Highlights</h2>
@@ -68,22 +114,28 @@
 
       <button class="btn" id="notesBtn" type="button" disabled>
         <span class="btn-label">Generate Highlights</span>
-        <span class="btn-spinner" aria-hidden="true"></span>
+        <span class="btn-spinner"></span>
       </button>
 
-      <div class="notes-output" id="notesOutput" aria-live="polite">
+      <div class="notes-output" id="notesOutput">
         Your highlights will appear here.
       </div>
     </section>
 
+
+    <!-- ========================= -->
+    <!-- Chat -->
+    <!-- ========================= -->
     <section class="card chat-card">
       <div class="card-header">
         <h2>Chat</h2>
         <p>Ask questions and get answers from the transcript.</p>
       </div>
 
-      <div class="chat-messages" id="chatMessages" aria-live="polite">
-        <div class="message assistant">Upload a meeting to start chatting.</div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="message assistant">
+          Upload or record a meeting to start chatting.
+        </div>
       </div>
 
       <form class="chat-input" id="chatForm">
@@ -95,12 +147,16 @@
           required
           disabled
         />
+
         <button class="btn primary" id="sendBtn" type="submit" disabled>
           <span class="btn-label">Send</span>
-          <span class="btn-spinner" aria-hidden="true"></span>
+          <span class="btn-spinner"></span>
         </button>
       </form>
     </section>
+
+
   </main>
+
 </body>
 </html>

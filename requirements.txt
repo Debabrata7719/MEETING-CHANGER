@@ -1,24 +1,24 @@
-# Backend API
+# FastAPI server
 fastapi
-uvicorn
+uvicorn[standard]
+python-multipart
 
-# Core ML / AI
+# Core AI
 openai-whisper
 sentence-transformers
-torch
+numpy
+scipy
 
-# Vector DB
-langchain-chroma
+# Audio recording
+sounddevice
+ffmpeg-python
 
-# LangChain ecosystem
+# Vector DB / RAG
+chromadb
 langchain
-langchain-classic
 langchain-community
 langchain-text-splitters
 langchain-groq
 
 # Config
 python-dotenv
-
-# Optional (safe for whisper/ffmpeg)
-ffmpeg-python

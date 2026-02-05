@@ -15,6 +15,8 @@ const apiStatus = document.getElementById("apiStatus");
 const loaderOverlay = document.getElementById("loaderOverlay");
 const loaderText = document.getElementById("loaderText");
 
+const recStatus = document.getElementById("recStatus"); // 🔥 NEW
+
 let selectedFile = null;
 let meetingReady = false;
 
@@ -78,8 +80,61 @@ function addMessage(text, role, options = {}) {
 
 function clearChatPlaceholder() {
   const first = chatMessages.querySelector(".message.assistant");
-  if (first && first.textContent.includes("Upload a meeting")) {
+  if (first && first.textContent.includes("Upload")) {
     first.remove();
+  }
+}
+
+
+/* =====================================================
+   🔥🔥 NEW — LIVE RECORDING FUNCTIONS (MAIN ADDITION)
+   ===================================================== */
+
+async function startRecording() {
+  try {
+    recStatus.textContent = "Status: Recording...";
+    setMeetingReady(false);
+
+    showLoader("Recording started...");
+
+    await fetch(`${API_BASE}/start-recording`, {
+      method: "POST"
+    });
+
+    hideLoader();
+
+  } catch {
+    recStatus.textContent = "Recording failed ❌";
+    hideLoader();
+  }
+}
+
+async function stopRecording() {
+  try {
+    recStatus.textContent = "Status: Processing...";
+    showLoader("Processing meeting...");
+
+    const response = await fetch(`${API_BASE}/stop-recording`, {
+      method: "POST"
+    });
+
+    if (!response.ok) throw new Error();
+
+    await response.json();
+
+    recStatus.textContent = "Status: Ready ✅";
+
+    setMeetingReady(true);
+
+    notesOutput.textContent = "Ready to generate highlights.";
+
+    clearChatPlaceholder();
+    addMessage("Meeting recorded and processed. Ask anything!", "assistant");
+
+  } catch {
+    recStatus.textContent = "Processing failed ❌";
+  } finally {
+    hideLoader();
   }
 }
 
@@ -155,7 +210,6 @@ uploadBtn.addEventListener("click", async () => {
 
     await response.json();
 
-    /* 🔥 MAIN FIX HERE */
     setStatus(`✅ Uploaded & processed: ${selectedFile.name}`, "success");
 
     setMeetingReady(true);
@@ -242,5 +296,6 @@ chatForm.addEventListener("submit", async (e) => {
     setButtonLoading(sendBtn, false);
   }
 });
+
 
 setMeetingReady(false);

@@ -26,6 +26,7 @@ body {
   overflow-x: hidden;
 }
 
+
 /* =========================
    HEADINGS
    ========================= */
@@ -35,6 +36,7 @@ h1, h2 {
   letter-spacing: -0.02em;
   margin: 0 0 6px;
 }
+
 
 /* =========================
    TOPBAR
@@ -58,6 +60,7 @@ h1, h2 {
   box-shadow: var(--shadow);
 }
 
+
 /* =========================
    LAYOUT
    ========================= */
@@ -78,6 +81,7 @@ h1, h2 {
   gap: 16px;
 }
 
+
 /* =========================
    UPLOAD
    ========================= */
@@ -96,6 +100,7 @@ h1, h2 {
   border-color: var(--accent);
   transform: translateY(-2px);
 }
+
 
 /* =========================
    BUTTONS
@@ -119,6 +124,36 @@ h1, h2 {
   transform: translateY(-2px);
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* =========================
+   🔥 RECORDING CARD STYLES (NEW)
+   ========================= */
+
+#recStatus {
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+#recStatus.recording {
+  color: #d62828;
+}
+
+#recStatus.processing {
+  color: var(--accent-2);
+}
+
+#recStatus.ready {
+  color: var(--accent);
+}
+
+
 /* =========================
    NOTES
    ========================= */
@@ -131,6 +166,7 @@ h1, h2 {
   background: #f9fbfa;
   white-space: pre-line;
 }
+
 
 /* =========================
    CHAT MESSAGES
@@ -167,12 +203,9 @@ h1, h2 {
   color: white;
 }
 
-/* =================================================
-   🔥🔥 MODERN CHAT INPUT (THIS FIXES YOUR PROBLEM)
-   ================================================= */
 
 /* =========================
-   FIXED CHAT INPUT
+   CHAT INPUT
    ========================= */
 
 .chat-input {
@@ -190,10 +223,9 @@ h1, h2 {
   box-shadow: 0 8px 20px rgba(17,31,27,0.08);
 }
 
-/* very important */
 .chat-input input {
   flex: 1;
-  min-width: 0;        /* 🔥 prevents overflow */
+  min-width: 0;
   border: none;
   outline: none;
   font-size: 1rem;
@@ -201,9 +233,8 @@ h1, h2 {
   background: transparent;
 }
 
-/* fixed width button */
 .chat-input .btn {
-  flex-shrink: 0;      /* 🔥 prevents shrinking */
+  flex-shrink: 0;
   width: 90px;
   height: 42px;
 }
@@ -246,6 +277,7 @@ h1, h2 {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
 
 /* =========================
    RESPONSIVE
