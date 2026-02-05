@@ -10,6 +10,7 @@ numpy
 scipy
 
 # Audio recording
+sounddevice
 ffmpeg-python
 
 # Vector DB / RAG
