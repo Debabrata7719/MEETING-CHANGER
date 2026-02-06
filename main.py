@@ -1,6 +1,5 @@
 """
 Meeting Intelligence System — FastAPI backend
-Clean + beginner friendly + debug safe
 """
 
 from pathlib import Path

@@ -14,7 +14,12 @@ load_dotenv()
 from langchain_groq import ChatGroq
 from langchain_chroma import Chroma
 from langchain_community.embeddings import SentenceTransformerEmbeddings
-from langchain_classic.chains import RetrievalQA
+
+# 🔥 NEW (memory + conversational chain)
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_classic.memory import ConversationBufferWindowMemory
+
+
 from langchain_core.prompts import PromptTemplate
 
 
@@ -55,6 +60,17 @@ llm = ChatGroq(
 
 
 # ===============================
+# MEMORY (short-term chat memory)
+# keeps last 4 interactions only
+# ===============================
+memory = ConversationBufferWindowMemory(
+    k=4,
+    memory_key="chat_history",
+    return_messages=True
+)
+
+
+# ===============================
 # PROMPT
 # ===============================
 template = """
@@ -78,13 +94,14 @@ prompt = PromptTemplate(
 
 
 # ===============================
-# QA CHAIN
+# CONVERSATIONAL RETRIEVAL CHAIN
+# (supports memory ✅)
 # ===============================
-qa_chain = RetrievalQA.from_chain_type(
+qa_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
     retriever=retriever,
-    chain_type="stuff",
-    chain_type_kwargs={"prompt": prompt}
+    memory=memory,
+    combine_docs_chain_kwargs={"prompt": prompt}
 )
 
 
@@ -100,6 +117,8 @@ def ask_question(query: str) -> str:
     if not query.strip():
         return "Please ask a valid question."
 
-    result = qa_chain.invoke({"query": query})
+    result = qa_chain.invoke({
+        "question": query
+    })
 
-    return result["result"]
+    return result["answer"]
