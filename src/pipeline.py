@@ -5,12 +5,6 @@ from langchain_classic.chains import TransformChain, SimpleSequentialChain
 from src.video_to_audio import video_to_audio
 from src.audio_to_text import audio_to_text
 from src.chunk_text import chunk_text
-from src.embed_store import embed_store
-
-
-# =================================
-# ONLY PREPROCESSING (NO LLM HERE)
-# =================================
 
 
 # 1️⃣ Video → Audio
@@ -29,7 +23,7 @@ audio_chain = TransformChain(
 )
 
 
-# 3️⃣ Text → Chunks
+# 3️⃣ Text → Chunks (LAST STEP)
 chunk_chain = TransformChain(
     input_variables=["text"],
     output_variables=["chunks"],
@@ -37,32 +31,20 @@ chunk_chain = TransformChain(
 )
 
 
-# 4️⃣ Chunks → Embeddings → VectorDB
-embed_chain = TransformChain(
-    input_variables=["chunks"],
-    output_variables=["db"],
-    transform=lambda x: {"db": embed_store(x["chunks"])}
-)
-
-
-# =================================
-# PIPELINE (NO HIGHLIGHTS HERE)
-# =================================
-
+# 🔥 NO embed_store here anymore
 pipeline = SimpleSequentialChain(
     chains=[
         video_chain,
         audio_chain,
-        chunk_chain,
-        embed_chain
+        chunk_chain
     ],
     verbose=True
 )
 
 
-# =================================
-# API wrapper
-# =================================
-
 def run_pipeline(video_path: str):
+    """
+    Returns chunks file path only.
+    Embedding handled in services.py
+    """
     return pipeline.run(video_path)

@@ -1,20 +1,17 @@
-# src/services.py
-
 from src.pipeline import run_pipeline
+from src.embed_store import embed_store
 from src.highlights import extract_highlights
 from src.chat import ask_question as chat_ask
 
 
-# called after upload
-def process_meeting(file_path: str):
-    run_pipeline(file_path)
+def process_meeting(file_path: str, meeting_id: str):
+    chunks_file = run_pipeline(file_path)
+    embed_store(chunks_file, meeting_id)
 
 
-# for notes
-def generate_notes():
-    return extract_highlights()
+def generate_notes(meeting_id: str):   # 🔥 FIXED
+    return extract_highlights(meeting_id)
 
 
-# for chat
-def ask_question(query: str):
-    return chat_ask(query)
+def ask_question(query: str, meeting_id: str):
+    return chat_ask(query, meeting_id)

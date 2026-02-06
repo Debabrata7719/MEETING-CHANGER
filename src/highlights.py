@@ -5,9 +5,10 @@ from langchain_core.prompts import ChatPromptTemplate
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  
+load_dotenv()
 
-def extract_highlights():
+
+def extract_highlights(meeting_id: str):
 
     print("🔍 Extracting meeting highlights...")
 
@@ -16,16 +17,18 @@ def extract_highlights():
         model_name="all-MiniLM-L6-v2"
     )
 
-    # ========= Load Vector DB =========
+    # 🔥 LOAD MEETING-SPECIFIC DB
+    db_path = os.path.join("data", "vectordb", meeting_id)
+
     db = Chroma(
-        persist_directory="data/vectordb",
+        persist_directory=db_path,
         embedding_function=embedding,
         collection_name="meeting_chunks"
     )
 
     retriever = db.as_retriever(search_kwargs={"k": 5})
 
-    # ========= Queries (auto brain) =========
+    # ========= Queries =========
     queries = [
         "important topics discussed",
         "decisions made in the meeting",
@@ -43,7 +46,7 @@ def extract_highlights():
 
     # ========= LLM =========
     llm = ChatGroq(
-        model_name="openai/gpt-oss-120b",   # safer + faster
+        model_name="openai/gpt-oss-120b",
         temperature=0
     )
 
@@ -66,14 +69,8 @@ Text:
     # ========= Save =========
     os.makedirs("Notes", exist_ok=True)
 
-    with open("Notes/highlights.txt", "w", encoding="utf-8") as f:
+    with open(f"Notes/highlights_{meeting_id}.txt", "w", encoding="utf-8") as f:
         f.write(result)
 
-    
-    print("Total chunks fetched:", len(chunks))
-    print("✅ Highlights saved at Notes/highlights.txt")
+    print("✅ Highlights saved")
     return result
-
-# ========= Safe run =========
-if __name__ == "__main__":
-    extract_highlights()

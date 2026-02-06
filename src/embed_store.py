@@ -2,18 +2,24 @@ import os
 import chromadb
 from sentence_transformers import SentenceTransformer
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# load model only once (faster)
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def embed_store(chunks_file):
+def embed_store(chunks_file: str, meeting_id: str):
+    """
+    Store embeddings using SAME meeting_id from backend.
+    DO NOT generate new id here.
+    """
 
-    db_folder = os.path.join(BASE_DIR, "data", "vectordb")
+    persist_directory = os.path.join(
+        "data",
+        "vectordb",
+        meeting_id
+    )
+
     collection_name = "meeting_chunks"
 
-    # -------- Step 1: Load chunks --------
     chunks = []
 
     with open(chunks_file, "r", encoding="utf-8") as f:
@@ -28,17 +34,13 @@ def embed_store(chunks_file):
 
     print(f"✅ Loaded {len(chunks)} chunks")
 
-    # -------- Step 2: Generate embeddings --------
     embeddings = model.encode(chunks).tolist()
 
-    print("✅ Embeddings created")
-
-    # -------- Step 3: Create Chroma DB --------
-    os.makedirs(db_folder, exist_ok=True)
+    os.makedirs(persist_directory, exist_ok=True)
 
     client = chromadb.Client(
         settings=chromadb.Settings(
-            persist_directory=db_folder,
+            persist_directory=persist_directory,
             is_persistent=True
         )
     )
@@ -51,7 +53,6 @@ def embed_store(chunks_file):
         ids=[str(i) for i in range(len(chunks))]
     )
 
-    print("✅ Stored embeddings in ChromaDB")
-    print(f"📁 Saved inside folder: {db_folder}")
+    print(f"✅ Stored embeddings in: {persist_directory}")
 
-    return db_folder   # 🔥 VERY IMPORTANT
+    return persist_directory

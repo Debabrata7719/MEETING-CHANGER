@@ -15,10 +15,13 @@ const apiStatus = document.getElementById("apiStatus");
 const loaderOverlay = document.getElementById("loaderOverlay");
 const loaderText = document.getElementById("loaderText");
 
-const recStatus = document.getElementById("recStatus"); // 🔥 NEW
+const recStatus = document.getElementById("recStatus");
 
 let selectedFile = null;
 let meetingReady = false;
+
+/* 🔥 active meeting id */
+let currentMeetingId = null;
 
 
 /* =========================
@@ -87,7 +90,7 @@ function clearChatPlaceholder() {
 
 
 /* =====================================================
-   🔥🔥 NEW — LIVE RECORDING FUNCTIONS (MAIN ADDITION)
+   RECORDING
    ===================================================== */
 
 async function startRecording() {
@@ -120,16 +123,27 @@ async function stopRecording() {
 
     if (!response.ok) throw new Error();
 
-    await response.json();
+    const data = await response.json();
+    currentMeetingId = data.meeting_id;
 
-    recStatus.textContent = "Status: Ready ✅";
+    // 🔥 SUCCESS UNDER LIVE RECORDING
+    recStatus.innerHTML = `
+      Status: Ready ✅ <br>
+      <span style="color:#16a34a;font-weight:600;">
+       Meeting recorded successfully!✅
+      </span>
+    `;
 
     setMeetingReady(true);
 
     notesOutput.textContent = "Ready to generate highlights.";
 
     clearChatPlaceholder();
-    addMessage("Meeting recorded and processed. Ask anything!", "assistant");
+
+    addMessage(
+      "✅ Meeting recorded successfully. You can now ask questions!",
+      "assistant"
+    );
 
   } catch {
     recStatus.textContent = "Processing failed ❌";
@@ -137,6 +151,7 @@ async function stopRecording() {
     hideLoader();
   }
 }
+
 
 
 /* =========================
@@ -208,7 +223,8 @@ uploadBtn.addEventListener("click", async () => {
 
     if (!response.ok) throw new Error("Upload failed");
 
-    await response.json();
+    const data = await response.json();
+    currentMeetingId = data.meeting_id;
 
     setStatus(`✅ Uploaded & processed: ${selectedFile.name}`, "success");
 
@@ -216,9 +232,13 @@ uploadBtn.addEventListener("click", async () => {
     notesOutput.textContent = "Ready to generate highlights.";
 
     clearChatPlaceholder();
-    addMessage("Meeting processed. Ask anything about it.", "assistant");
 
-  } catch (err) {
+    addMessage(
+      "✅ Meeting uploaded and processed successfully. Ask anything about it!",
+      "assistant"
+    );
+
+  } catch {
     setStatus("❌ Upload failed.", "muted");
   } finally {
     hideLoader();
@@ -263,7 +283,7 @@ chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const question = chatInput.value.trim();
-  if (!question) return;
+  if (!question || !currentMeetingId) return;
 
   clearChatPlaceholder();
   addMessage(question, "user");
@@ -279,7 +299,10 @@ chatForm.addEventListener("submit", async (e) => {
     const response = await fetch(`${API_BASE}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({
+        question,
+        meeting_id: currentMeetingId
+      }),
     });
 
     if (!response.ok) throw new Error();
