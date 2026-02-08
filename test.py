@@ -1,6 +1,4 @@
-from src.recorder import start_recording, stop_recording
-import time
+import sounddevice as sd
 
-s = start_recording()
-time.sleep(10)
-stop_recording(s)
+for i, d in enumerate(sd.query_devices()):
+    print(i, d["name"], "inputs:", d["max_input_channels"])
