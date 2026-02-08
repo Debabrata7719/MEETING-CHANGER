@@ -30,7 +30,7 @@ Frontend: HTML, CSS, JS
 
 ## Workflow
 
-Video → Audio → Transcript → Chunks → Embeddings → Vector DB
+Video → Audio → Transcript → Chunks → Embeddings → Vector DB → Query
 
 
 - `/upload` → process meeting  
