@@ -2,7 +2,7 @@
 
 Convert meeting recordings into **highlights + answers + chat**.
 
-Upload a meeting → get transcript → generate notes → ask questions.
+Upload a meeting / Record Meeting → get transcript → generate notes → ask questions.
 
 Built with FastAPI + LangChain + Whisper + ChromaDB + Groq.
 
@@ -60,16 +60,15 @@ index.html
 or
 
 python -m http.server 5500
+
 Problems faced ----------
-Highlights auto-running during upload → separated into /notes
-
-Chroma import errors → switched to langchain-chroma
-
-File upload issues → installed python-multipart
-
-Chat UI layout fixes with CSS
-
-Learned a lot about building real-world RAG + FastAPI apps.
+1. Highlights auto-running during upload → separated into /notes
+2. Chroma import errors → switched to langchain-chroma
+3. File upload issues → installed python-multipart
+4. Chat UI layout fixes with CSS
+5. It only record user voice after it now it record user + Other participant in the meeting
+   
+   Learned a lot about building real-world RAG + FastAPI apps.
 
 
-add Ci pipeline 
+Add Ci pipeline 

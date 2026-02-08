@@ -12,6 +12,7 @@ scipy
 # Audio recording
 sounddevice
 ffmpeg-python
+soundfile
 
 # Vector DB / RAG
 chromadb

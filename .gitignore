@@ -1,60 +1,42 @@
-# =========================
 # Python
-# =========================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# =========================
 # Virtual Environment
-# =========================
 venv/
 .venv/
 
 .env
 
-# =========================
 # Audio / Video (BIG FILES)
-# =========================
 *.wav
 *.mp3
 *.mp4
 *.mkv
 
-# =========================
 # Generated outputs
-# =========================
 audio_to_text/*.txt
 video_to_audio/*.wav
 
-# =========================
 # Local data / notes
-# =========================
 data/
 Notes/
 uploads/
 
-# =========================
 # Vector DB (future)
-# =========================
 vectordb/
 chroma/
 
-# =========================
 # Whisper models
-# =========================
 *.pt
 *.bin
 
-# =========================
 # VS Code
-# =========================
 .vscode/
 
-# =========================
 # Tooling caches
-# =========================
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -62,8 +44,6 @@ chroma/
 htmlcov/
 *.log
 
-# =========================
 # OS junk
-# =========================
 .DS_Store
 Thumbs.db

@@ -53,6 +53,9 @@ Answer ONLY using context.
 Rules:
 - Do not guess
 - If not found say: "Not found in the meeting transcript"
+-Answer in the same language as the user's question.
+If user speaks Hindi, reply in Hindi.
+If English, reply in English.
 
 Context:
 {context}

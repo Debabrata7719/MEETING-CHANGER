@@ -12,7 +12,8 @@ def audio_to_text(audio_path):
     output_folder = os.path.join(BASE_DIR, "data", "intermediate")
     os.makedirs(output_folder, exist_ok=True)
 
-    result = model.transcribe(audio_path)
+    result = model.transcribe(audio_path, task="translate")
+
 
     output_file = os.path.join(output_folder, "transcript.txt")
 
