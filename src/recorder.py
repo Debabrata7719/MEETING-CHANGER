@@ -1,29 +1,24 @@
 # src/recorder.py
-# SIMPLE VERSION: system audio only
 
 import sounddevice as sd
 import numpy as np
 import soundfile as sf
 
 FS = 16000
-DEVICE_ID = 1      # ⭐ Stereo Mix (Realtek)
+DEVICE_ID = 1      #  Stereo Mix (Realtek)
 CHANNELS = 2       # stereo
 
 recording = []
 is_recording = False
 
 
-# =========================
 # Callback
-# =========================
 def _callback(indata, frames, time, status):
     if is_recording:
         recording.append(indata.copy())
 
 
-# =========================
 # Start recording
-# =========================
 def start_recording():
     global recording, is_recording
 
@@ -38,14 +33,12 @@ def start_recording():
     )
 
     stream.start()
-    print("🎧 Recording SYSTEM AUDIO only (Stereo Mix)...")
+    print("🎧 Recording SYSTEM AUDIO  (Stereo Mix)...")
 
     return stream
 
 
-# =========================
 # Stop recording
-# =========================
 def stop_recording(stream, filename="uploads/meeting.wav"):
     global is_recording
 

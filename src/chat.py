@@ -20,33 +20,25 @@ from langchain_classic.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 
 
-# ===============================
 # PATH SETUP
-# ===============================
 BASE_DIR = Path(__file__).resolve().parent.parent
 VECTORDB_DIR = BASE_DIR / "data" / "vectordb"
 
 
-# ===============================
 # EMBEDDING (load once → faster)
-# ===============================
 embedding = SentenceTransformerEmbeddings(
     model_name="all-MiniLM-L6-v2"
 )
 
 
-# ===============================
 # LLM (load once)
-# ===============================
 llm = ChatGroq(
     model_name="openai/gpt-oss-120b",
     temperature=0
 )
 
 
-# ===============================
 # PROMPT
-# ===============================
 template = """
 Answer ONLY using context.
 
@@ -56,6 +48,7 @@ Rules:
 -Answer in the same language as the user's question.
 If user speaks Hindi, reply in Hindi.
 If English, reply in English.
+If Bengali, reply in Bengali.
 
 Context:
 {context}
@@ -70,9 +63,7 @@ prompt = PromptTemplate(
 )
 
 
-# ===============================
 # HELPER → Load DB for meeting
-# ===============================
 def load_chain(meeting_id: str):
     """
     Creates retriever + memory + chain
@@ -93,7 +84,7 @@ def load_chain(meeting_id: str):
 
     retriever = db.as_retriever(search_kwargs={"k": 5})
 
-    # 🔥 NEW memory created per meeting (important)
+    #  NEW memory created per meeting (important)
     memory = ConversationBufferWindowMemory(
         k=4,
         memory_key="chat_history",
@@ -110,9 +101,7 @@ def load_chain(meeting_id: str):
     return chain
 
 
-# ===============================
 # MAIN FUNCTION (API safe)
-# ===============================
 def ask_question(query: str, meeting_id: str) -> str:
     """
     Called by FastAPI.

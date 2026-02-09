@@ -31,7 +31,7 @@ chunk_chain = TransformChain(
 )
 
 
-# 🔥 NO embed_store here anymore
+# NO embed_store here anymore
 pipeline = SimpleSequentialChain(
     chains=[
         video_chain,

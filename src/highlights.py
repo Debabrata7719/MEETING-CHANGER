@@ -17,7 +17,7 @@ def extract_highlights(meeting_id: str):
         model_name="all-MiniLM-L6-v2"
     )
 
-    # 🔥 LOAD MEETING-SPECIFIC DB
+    #  LOAD MEETING-SPECIFIC DB
     db_path = os.path.join("data", "vectordb", meeting_id)
 
     db = Chroma(

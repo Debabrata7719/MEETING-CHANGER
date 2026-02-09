@@ -32,4 +32,4 @@ def chunk_text(transcript_path):
     print(f"Chunks saved at: {output_path}")
     print(f"Total chunks created: {len(chunks)}")
 
-    return output_path   # 🔥 VERY IMPORTANT
+    return output_path   #  VERY IMPORTANT

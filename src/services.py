@@ -9,7 +9,7 @@ def process_meeting(file_path: str, meeting_id: str):
     embed_store(chunks_file, meeting_id)
 
 
-def generate_notes(meeting_id: str):   # 🔥 FIXED
+def generate_notes(meeting_id: str):   
     return extract_highlights(meeting_id)
 
 
