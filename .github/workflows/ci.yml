@@ -57,11 +57,16 @@ jobs:
         run: |
           python - <<EOF
           from src.chunk_text import chunk_text
-          text = "hello world " * 50
-          chunks = chunk_text(text)
+
+          sample_path = "sample.txt"
+          with open(sample_path, "w") as f:
+          f.write("hello world " * 50)
+
+          chunks = chunk_text(sample_path)
           assert len(chunks) > 0
           print("Pipeline OK")
           EOF
+          
 
       # ========================
       # Done
