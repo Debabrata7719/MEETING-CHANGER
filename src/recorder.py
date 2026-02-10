@@ -22,7 +22,7 @@ def _callback(indata, frames, time, status):
 def start_recording():
     global recording, is_recording
 
-    recording = []
+    recording = [
     is_recording = True
 
     stream = sd.InputStream(
