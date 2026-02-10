@@ -2,11 +2,9 @@ name: Meeting App CI Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
@@ -26,12 +24,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Basic import test
+      # ✅ Syntax check
+      - name: Lint / syntax check
         run: |
-          python -c "import fastapi"
-          python -c "import langchain"
-          python -c "import chromadb"
+          python -m py_compile main.py
+          python -m py_compile src/*.py
 
-      - name: Start FastAPI test
+      # ✅ Import project modules
+      - name: Test project imports
         run: |
-          timeout 5s uvicorn main:app || true
+          python -c "import main"
+          python -c "from src import pipeline, services, chat"
+
+      # ✅ Run FastAPI briefly (fail if crash)
+      - name: Start FastAPI
+        run: |
+          timeout 5 uvicorn main:app
