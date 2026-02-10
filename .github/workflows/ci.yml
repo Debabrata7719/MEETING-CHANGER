@@ -60,7 +60,7 @@ jobs:
 
           sample_path = "sample.txt"
           with open(sample_path, "w") as f:
-          f.write("hello world " * 50)
+            f.write("hello world " * 50)
 
           chunks = chunk_text(sample_path)
           assert len(chunks) > 0
