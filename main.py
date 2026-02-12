@@ -6,22 +6,20 @@ from pathlib import Path
 from uuid import uuid4
 import traceback
 import importlib
+import os
+import json
+from datetime import datetime
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from src.recorder import start_recording, stop_recording
-
-from fastapi.responses import FileResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
-import os
-from datetime import datetime
-
-
+from reportlab.lib.styles import getSampleStyleSheet
+from docx import Document
 
 
 # ===============================
@@ -64,8 +62,6 @@ ALLOWED_EXTENSIONS = {".mp4", ".mp3", ".wav"}
 # ===============================
 # Runtime state
 # ===============================
-app.state.current_meeting_id = None
-app.state.meeting_processed = False
 stream = None
 
 
@@ -74,24 +70,32 @@ stream = None
 # ===============================
 class ChatRequest(BaseModel):
     question: str
-    meeting_id: str   # 🔥 NEW
+    meeting_id: str
+
+
+class NotesRequest(BaseModel):
+    meeting_id: str
+
+
+class MeetingName(BaseModel):
+    meeting_id: str
+    name: str
 
 
 # ===============================
-# Routes
+# Root
 # ===============================
 @app.get("/")
 async def root():
     return {"message": "API running"}
 
 
-# ------------------------------------------------
+# ===============================
 # Start recording
-# ------------------------------------------------
+# ===============================
 @app.post("/start-recording")
 async def start_rec():
     global stream
-
     try:
         stream = start_recording()
         return {"message": "Recording started"}
@@ -100,9 +104,9 @@ async def start_rec():
         raise HTTPException(500, "Recording failed to start")
 
 
-# ------------------------------------------------
+# ===============================
 # Stop recording + process
-# ------------------------------------------------
+# ===============================
 @app.post("/stop-recording")
 async def stop_rec():
     global stream
@@ -111,19 +115,16 @@ async def stop_rec():
         raise HTTPException(400, "Recording not started")
 
     try:
-        meeting_id = uuid4().hex  # 🔥 NEW
+        meeting_id = uuid4().hex
 
         audio_path = stop_recording(stream, "uploads/meeting.wav")
-
         await run_in_threadpool(process_meeting, str(audio_path), meeting_id)
 
-        app.state.current_meeting_id = meeting_id
-        app.state.meeting_processed = True
         stream = None
 
         return {
-            "message": "Recording stopped & meeting processed",
-            "meeting_id": meeting_id   # 🔥 send to frontend
+            "message": "Recording stopped & processed",
+            "meeting_id": meeting_id
         }
 
     except Exception:
@@ -131,9 +132,9 @@ async def stop_rec():
         raise HTTPException(500, "Recording processing failed")
 
 
-# -------------------------------
+# ===============================
 # Upload + process
-# -------------------------------
+# ===============================
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
 
@@ -141,8 +142,7 @@ async def upload(file: UploadFile = File(...)):
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, "Only mp4/mp3/wav allowed")
 
-    meeting_id = uuid4().hex  # 🔥 NEW
-
+    meeting_id = uuid4().hex
     file_path = UPLOAD_DIR / f"{meeting_id}{ext}"
 
     try:
@@ -154,33 +154,25 @@ async def upload(file: UploadFile = File(...)):
 
     except Exception:
         traceback.print_exc()
-        raise HTTPException(500, "Pipeline crashed. Check terminal.")
-
-    app.state.current_meeting_id = meeting_id
-    app.state.meeting_processed = True
+        raise HTTPException(500, "Pipeline crashed")
 
     return {
         "message": "meeting processed successfully",
-        "meeting_id": meeting_id   # 🔥 send to frontend
+        "meeting_id": meeting_id
     }
 
 
-# -------------------------------
-# Notes
-# -------------------------------
+# ===============================
+# Generate highlights (SELECTED MEETING)
+# ===============================
 @app.post("/notes")
-async def notes():
-
-    if not app.state.meeting_processed:
-        raise HTTPException(400, "Upload/Record meeting first")
+async def notes(payload: NotesRequest):
 
     try:
-        # 🔥 pass meeting_id to highlights
         result = await run_in_threadpool(
             generate_notes,
-            app.state.current_meeting_id
+            payload.meeting_id
         )
-
         return {"notes": result}
 
     except Exception:
@@ -188,22 +180,18 @@ async def notes():
         raise HTTPException(500, "Notes generation failed")
 
 
-# -------------------------------
-# Chat
-# -------------------------------
+# ===============================
+# Chat (SELECTED MEETING)
+# ===============================
 @app.post("/chat")
 async def chat(payload: ChatRequest):
-
-    if not app.state.meeting_processed:
-        raise HTTPException(400, "Upload/Record meeting first")
 
     try:
         answer = await run_in_threadpool(
             ask_question,
             payload.question,
-            payload.meeting_id   # 🔥 NEW
+            payload.meeting_id
         )
-
         return {"answer": answer}
 
     except Exception:
@@ -211,30 +199,14 @@ async def chat(payload: ChatRequest):
         raise HTTPException(500, "Chat failed")
 
 
-
-
-#download notes
-# ==============================
+# ==========================================================
 # Download Highlights
-# ==============================
-
-from fastapi.responses import FileResponse
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from docx import Document
-import os
-import json
-
-
+# ==========================================================
 @app.get("/download-notes")
 def download_notes(meeting_id: str, format: str = "pdf"):
 
-    # =========================
-    # Load Meeting Name
-    # =========================
-
+    # ---------- load meeting name ----------
     meeting_name = meeting_id
-
     mapping_file = "data/meetings.json"
 
     if os.path.exists(mapping_file):
@@ -242,14 +214,11 @@ def download_notes(meeting_id: str, format: str = "pdf"):
             db = json.load(f)
             meeting_name = db.get(meeting_id, meeting_id)
 
-    # remove unsafe filename characters
     meeting_name = "".join(
         c for c in meeting_name if c.isalnum() or c in (" ", "-", "_")
     ).strip()
 
-    # =========================
-    # Load highlights text
-    # =========================
+    download_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
 
     txt_path = f"Notes/highlights_{meeting_id}.txt"
 
@@ -259,13 +228,11 @@ def download_notes(meeting_id: str, format: str = "pdf"):
     with open(txt_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    # ======================================================
-    # ================= PDF DOWNLOAD =======================
-    # ======================================================
 
+    # ================= PDF =================
     if format == "pdf":
 
-        pdf_path = f"Notes/{meeting_name}.pdf"
+        pdf_path = f"Notes/{meeting_name}_{meeting_id}.pdf"
 
         doc = SimpleDocTemplate(pdf_path)
         styles = getSampleStyleSheet()
@@ -273,8 +240,8 @@ def download_notes(meeting_id: str, format: str = "pdf"):
 
         elements.append(Paragraph("Meeting Highlights", styles["Heading1"]))
         elements.append(Spacer(1, 20))
-
         elements.append(Paragraph(f"Meeting: {meeting_name}", styles["Normal"]))
+        elements.append(Paragraph(f"Downloaded: {download_time}", styles["Normal"]))
         elements.append(Spacer(1, 20))
 
         for line in text.split("\n"):
@@ -290,32 +257,31 @@ def download_notes(meeting_id: str, format: str = "pdf"):
         )
 
 
-
-    # ======================================================
-    # ================= TXT DOWNLOAD =======================
-    # ======================================================
-
+    # ================= TXT =================
     elif format == "txt":
 
+        header = f"Meeting: {meeting_name}\nDownloaded: {download_time}\n\n"
+        temp_path = f"Notes/{meeting_name}_{meeting_id}.txt"
+
+        with open(temp_path, "w", encoding="utf-8") as f:
+            f.write(header + text)
+
         return FileResponse(
-            txt_path,
+            temp_path,
             media_type="text/plain",
             filename=f"{meeting_name}.txt"
         )
 
 
-
-    # ======================================================
-    # ================= DOCX DOWNLOAD ======================
-    # ======================================================
-
+    # ================= DOCX =================
     elif format == "docx":
 
-        docx_path = f"Notes/{meeting_name}.docx"
+        docx_path = f"Notes/{meeting_name}_{meeting_id}.docx"
 
         document = Document()
         document.add_heading("Meeting Highlights", 0)
         document.add_paragraph(f"Meeting: {meeting_name}")
+        document.add_paragraph(f"Downloaded: {download_time}")
         document.add_paragraph("")
 
         for line in text.split("\n"):
@@ -329,28 +295,15 @@ def download_notes(meeting_id: str, format: str = "pdf"):
             filename=f"{meeting_name}.docx"
         )
 
-
-
-    # ======================================================
-    # ================= INVALID FORMAT =====================
-    # ======================================================
-
     else:
         return {"error": "Invalid format"}
 
 
-
-#For set meeting name by user
-class MeetingName(BaseModel):
-    meeting_id: str
-    name: str
-
-
+# ==========================================================
+# Save meeting name
+# ==========================================================
 @app.post("/set-meeting-name")
 def set_meeting_name(data: MeetingName):
-
-    meeting_id = data.meeting_id
-    name = data.name
 
     os.makedirs("data", exist_ok=True)
     file = "data/meetings.json"
@@ -361,9 +314,29 @@ def set_meeting_name(data: MeetingName):
     else:
         db = {}
 
-    db[meeting_id] = name
+    db[data.meeting_id] = data.name
 
     with open(file, "w") as f:
         json.dump(db, f, indent=2)
 
     return {"status": "saved"}
+
+
+# ==========================================================
+# Meeting history list
+# ==========================================================
+@app.get("/meetings")
+def list_meetings():
+
+    file = "data/meetings.json"
+
+    if not os.path.exists(file):
+        return []
+
+    with open(file) as f:
+        db = json.load(f)
+
+    meetings = [{"id": k, "name": v} for k, v in db.items()]
+    meetings.reverse()
+
+    return meetings
