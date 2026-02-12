@@ -20,41 +20,54 @@ from langchain_classic.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 
 
+# ===============================
 # PATH SETUP
+# ===============================
 BASE_DIR = Path(__file__).resolve().parent.parent
 VECTORDB_DIR = BASE_DIR / "data" / "vectordb"
 
 
+# ===============================
 # EMBEDDING (load once → faster)
+# ===============================
 embedding = SentenceTransformerEmbeddings(
     model_name="all-MiniLM-L6-v2"
 )
 
 
+# ===============================
 # LLM (load once)
+# ===============================
 llm = ChatGroq(
     model_name="openai/gpt-oss-120b",
     temperature=0
 )
 
 
-# PROMPT
+# ===============================
+# PROMPT (UPGRADED INTELLIGENCE)
+# ===============================
 template = """
-Answer ONLY using context.
+You are an expert meeting assistant.
 
-Rules:
-- Do not guess
-- If not found say: "Not found in the meeting transcript"
--Answer in the same language as the user's question.
-If user speaks Hindi, reply in Hindi.
-If English, reply in English.
-If Bengali, reply in Bengali.
+STRICT RULES:
+- Answer ONLY from context
+- Do NOT guess or hallucinate
+- If answer not present → say: "Not found in the meeting transcript"
+- Keep answer concise but complete
+- Prefer bullet points if multiple items
+- Preserve numbers, dates, and names exactly
+
+Language Rule:
+Respond in the SAME language as the question.
 
 Context:
 {context}
 
 Question:
 {question}
+
+Answer:
 """
 
 prompt = PromptTemplate(
@@ -63,7 +76,9 @@ prompt = PromptTemplate(
 )
 
 
+# ===============================
 # HELPER → Load DB for meeting
+# ===============================
 def load_chain(meeting_id: str):
     """
     Creates retriever + memory + chain
@@ -71,7 +86,6 @@ def load_chain(meeting_id: str):
     """
 
     db_path = VECTORDB_DIR / meeting_id
-
 
     if not db_path.exists():
         raise ValueError(f"Meeting not found: {meeting_id}")
@@ -82,11 +96,16 @@ def load_chain(meeting_id: str):
         collection_name="meeting_chunks"
     )
 
-    retriever = db.as_retriever(search_kwargs={"k": 5})
+    # ===== Improved Retriever =====
+    retriever = db.as_retriever(
+        search_kwargs={
+            "k": 7   # slightly more context improves accuracy
+        }
+    )
 
-    #  NEW memory created per meeting (important)
+    # ===== Meeting-specific memory =====
     memory = ConversationBufferWindowMemory(
-        k=4,
+        k=5,  # slightly longer memory window
         memory_key="chat_history",
         return_messages=True
     )
@@ -101,7 +120,9 @@ def load_chain(meeting_id: str):
     return chain
 
 
+# ===============================
 # MAIN FUNCTION (API safe)
+# ===============================
 def ask_question(query: str, meeting_id: str) -> str:
     """
     Called by FastAPI.
@@ -117,7 +138,13 @@ def ask_question(query: str, meeting_id: str) -> str:
     qa_chain = load_chain(meeting_id)
 
     result = qa_chain.invoke({
-        "question": query
+        "question": query.strip()
     })
 
-    return result["answer"]
+    answer = result["answer"].strip()
+
+    # ===== Extra Safety Filter =====
+    if not answer:
+        return "Not found in the meeting transcript"
+
+    return answer
