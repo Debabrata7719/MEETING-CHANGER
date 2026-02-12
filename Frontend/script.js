@@ -1,372 +1,337 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE="http://127.0.0.1:8000";
 
-const dropZone = document.getElementById("dropZone");
-const fileInput = document.getElementById("fileInput");
-const uploadBtn = document.getElementById("uploadBtn");
-const uploadStatus = document.getElementById("uploadStatus");
-const notesBtn = document.getElementById("notesBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const notesOutput = document.getElementById("notesOutput");
-const chatMessages = document.getElementById("chatMessages");
-const chatForm = document.getElementById("chatForm");
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const apiStatus = document.getElementById("apiStatus");
+/* ================= ELEMENTS ================= */
+const dropZone=document.getElementById("dropZone");
+const fileInput=document.getElementById("fileInput");
+const uploadBtn=document.getElementById("uploadBtn");
+const uploadStatus=document.getElementById("uploadStatus");
+const notesBtn=document.getElementById("notesBtn");
+const downloadBtn=document.getElementById("downloadBtn");
+const notesOutput=document.getElementById("notesOutput");
+const chatMessages=document.getElementById("chatMessages");
+const chatForm=document.getElementById("chatForm");
+const chatInput=document.getElementById("chatInput");
+const sendBtn=document.getElementById("sendBtn");
+const apiStatus=document.getElementById("apiStatus");
+const loaderOverlay=document.getElementById("loaderOverlay");
+const loaderText=document.getElementById("loaderText");
+const recStatus=document.getElementById("recStatus");
+const downloadModal=document.getElementById("downloadModal");
+const activeMeetingLabel=document.getElementById("activeMeetingLabel");
+const recordTimer=document.getElementById("recordTimer");
 
-const loaderOverlay = document.getElementById("loaderOverlay");
-const loaderText = document.getElementById("loaderText");
+/* ================= STATE ================= */
+let selectedFile=null;
+let meetingReady=false;
+let currentMeetingId=null;
+let timerInterval=null;
+let secondsElapsed=0;
 
-const recStatus = document.getElementById("recStatus");
-const downloadModal = document.getElementById("downloadModal");
+/* ================= TIMER ================= */
+function startTimer(){
+  secondsElapsed=0;
+  recordTimer.textContent="00:00";
+  timerInterval=setInterval(()=>{
+    secondsElapsed++;
+    const mins=String(Math.floor(secondsElapsed/60)).padStart(2,"0");
+    const secs=String(secondsElapsed%60).padStart(2,"0");
+    recordTimer.textContent=`${mins}:${secs}`;
+  },1000);
+}
+function stopTimer(){clearInterval(timerInterval)}
 
-let selectedFile = null;
-let meetingReady = false;
-let currentMeetingId = null;
-
-
-/* =========================
-   LOADER
-========================= */
-
-function showLoader(text = "Processing...") {
-  loaderText.textContent = text;
+/* ================= LOADER ================= */
+function showLoader(text="Processing..."){
+  loaderText.textContent=text;
   loaderOverlay.classList.remove("hidden");
 }
+function hideLoader(){loaderOverlay.classList.add("hidden")}
 
-function hideLoader() {
-  loaderOverlay.classList.add("hidden");
+/* ================= UI HELPERS ================= */
+function setMeetingReady(v){
+  meetingReady=v;
+  notesBtn.disabled=!v;
+  downloadBtn.disabled=!v;
+  chatInput.disabled=!v;
+  sendBtn.disabled=!v;
+  apiStatus.querySelector("span:last-child").textContent=
+    v?"API: Ready":"API: Waiting";
 }
 
+function setActiveMeeting(name){
+  activeMeetingLabel.innerHTML=`
+    <span class="info-dot"></span>
+    <span class="info-text"><strong>${name}</strong></span>
+    <span class="info-badge">Active</span>`;
+}
 
-/* =========================
-   UI HELPERS
-========================= */
+function addMessage(text,role){
+  const msg=document.createElement("div");
+  msg.className=`message ${role}`;
+  msg.textContent=text;
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  return msg;
+}
 
-function setButtonLoading(button, loading) {
-  if (loading) {
-    button.classList.add("is-loading");
-    button.disabled = true;
-  } else {
-    button.classList.remove("is-loading");
-    button.disabled = false;
+function clearChat(){chatMessages.innerHTML=""}
+
+/* ================= TYPING INDICATOR ================= */
+function showTypingIndicator(){
+  const el=document.createElement("div");
+  el.className="message assistant typing-indicator";
+  el.innerHTML="<span></span><span></span><span></span>";
+  chatMessages.appendChild(el);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  return el;
+}
+
+/* ================= HISTORY ================= */
+async function loadHistory(){
+  try{
+    const res=await fetch(`${API_BASE}/meetings`);
+    const meetings=await res.json();
+    const container=document.getElementById("historyList");
+    if(!container) return;
+    container.innerHTML="";
+
+    if(!meetings.length){
+      container.innerHTML='<div class="empty-state">No meetings yet. Record or upload to get started.</div>';
+      return;
+    }
+
+    meetings.forEach(m=>{
+      const div=document.createElement("div");
+      div.className="history-item";
+      div.textContent=m.name;
+      div.style.cursor="pointer";
+      div.onclick=()=>{
+        document.querySelectorAll(".history-item")
+          .forEach(el=>el.classList.remove("active"));
+        div.classList.add("active");
+        currentMeetingId=m.id;
+        setMeetingReady(true);
+        setActiveMeeting(m.name);
+        notesOutput.innerHTML='<div class="empty-state">Meeting loaded. Click Generate for highlights.</div>';
+        clearChat();
+        addMessage(`Loaded meeting: ${m.name}`,"assistant");
+      };
+      container.appendChild(div);
+    });
+  }catch(err){
+    console.error("History error:",err);
   }
 }
 
-function setStatus(text, type = "muted") {
-  uploadStatus.textContent = text;
-  uploadStatus.className = `status ${type}`;
-}
-
-function setMeetingReady(value) {
-  meetingReady = value;
-
-  notesBtn.disabled = !value;
-  downloadBtn.disabled = !value;
-  chatInput.disabled = !value;
-  sendBtn.disabled = !value;
-
-  apiStatus.querySelector("span:last-child").textContent =
-    value ? "API: Ready" : "API: Waiting";
-}
-
-function addMessage(text, role, options = {}) {
-  const message = document.createElement("div");
-  message.className = `message ${role}`;
-
-  if (options.loading) message.classList.add("loading");
-
-  message.textContent = text;
-  chatMessages.appendChild(message);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-
-  return message;
-}
-
-function clearChatPlaceholder() {
-  const first = chatMessages.querySelector(".message.assistant");
-  if (first && first.textContent.includes("Upload")) {
-    first.remove();
-  }
-}
-
-
-/* =====================================================
-   ASK MEETING NAME
-===================================================== */
-
-function askMeetingName() {
+/* ================= NAME MODAL ================= */
+function askMeetingName(){
   document.getElementById("nameModal").classList.remove("hidden");
 }
 
-async function submitMeetingName() {
-  const input = document.getElementById("meetingNameInput");
-  let name = input.value.trim();
+async function submitMeetingName(){
+  const input=document.getElementById("meetingNameInput");
+  let name=input.value.trim();
+  if(!name) name="Untitled Meeting";
 
-  if (!name) name = "Untitled Meeting";
-
-  await fetch(`${API_BASE}/set-meeting-name`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      meeting_id: currentMeetingId,
-      name: name
-    })
+  await fetch(`${API_BASE}/set-meeting-name`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({meeting_id:currentMeetingId,name:name})
   });
 
   document.getElementById("nameModal").classList.add("hidden");
+  setActiveMeeting(name);
+  loadHistory();
 }
 
-
-
-/* =====================================================
-   RECORDING
-===================================================== */
-
-async function startRecording() {
-  try {
-    recStatus.textContent = "Status: Recording...";
+/* ================= RECORDING ================= */
+async function startRecording(){
+  try{
+    recStatus.textContent="Recording...";
+    recStatus.className="status recording";
     setMeetingReady(false);
-
-    showLoader("Recording started...");
-
-    await fetch(`${API_BASE}/start-recording`, {
-      method: "POST"
-    });
-
-    hideLoader();
-
-  } catch {
-    recStatus.textContent = "Recording failed ❌";
-    hideLoader();
+    startTimer();
+    await fetch(`${API_BASE}/start-recording`,{method:"POST"});
+  }catch{
+    recStatus.textContent="Failed";
+    recStatus.className="status muted";
+    stopTimer();
   }
 }
 
-async function stopRecording() {
-  try {
-    recStatus.textContent = "Status: Processing...";
-    showLoader("Processing meeting...");
+async function stopRecording(){
+  try{
+    stopTimer();
+    recStatus.textContent="Processing...";
+    recStatus.className="status processing";
 
-    const response = await fetch(`${API_BASE}/stop-recording`, {
-      method: "POST"
-    });
+    const res=await fetch(`${API_BASE}/stop-recording`,{method:"POST"});
+    if(!res.ok) throw new Error();
 
-    if (!response.ok) throw new Error();
+    const data=await res.json();
+    currentMeetingId=data.meeting_id;
+    askMeetingName();
 
-    const data = await response.json();
-    currentMeetingId = data.meeting_id;
-
-    // ⭐ ASK NAME AFTER RECORDING
-    await askMeetingName();
-
-    recStatus.innerHTML = `
-      Status: Ready ✅ <br>
-      <span style="color:#16a34a;font-weight:600;">
-       Meeting recorded successfully!✅
-      </span>
-    `;
-
+    recStatus.textContent="Ready";
+    recStatus.className="status ready";
     setMeetingReady(true);
-    notesOutput.textContent = "Ready to generate highlights.";
 
-    clearChatPlaceholder();
-
-    addMessage(
-      "✅ Meeting recorded successfully. You can now ask questions!",
-      "assistant"
-    );
-
-  } catch {
-    recStatus.textContent = "Processing failed ❌";
-  } finally {
-    hideLoader();
+    notesOutput.innerHTML='<div class="empty-state">Ready to generate highlights.</div>';
+    clearChat();
+    addMessage("Meeting processed successfully!","assistant");
+  }catch{
+    recStatus.textContent="Failed";
+    recStatus.className="status muted";
   }
 }
 
-
-/* =========================
-   FILE SELECT
-========================= */
-
-function handleFileSelection(file) {
-  if (!file) return;
-
-  selectedFile = file;
-  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-  setStatus(`🎬 ${file.name} (${sizeMB} MB) selected`, "success");
+/* ================= FILE SELECT ================= */
+function handleFileSelection(file){
+  if(!file) return;
+  selectedFile=file;
+  uploadStatus.textContent=`Selected: ${file.name}`;
 }
 
-
-/* =========================
-   DRAG DROP
-========================= */
-
-["dragenter", "dragover"].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (e) => {
-    e.preventDefault();
-    dropZone.classList.add("is-dragover");
-  });
+/* Click anywhere on dropzone opens file picker */
+dropZone.addEventListener("click",(e)=>{
+  if(e.target===fileInput) return;
+  fileInput.click();
 });
 
-["dragleave", "drop"].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("is-dragover");
-  });
+/* Drag & drop support */
+dropZone.addEventListener("dragover",(e)=>{
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+dropZone.addEventListener("dragleave",()=>{
+  dropZone.classList.remove("dragover");
+});
+dropZone.addEventListener("drop",e=>{
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+  handleFileSelection(e.dataTransfer.files[0]);
 });
 
-dropZone.addEventListener("drop", (e) => {
-  const file = e.dataTransfer.files[0];
-  fileInput.files = e.dataTransfer.files;
-  handleFileSelection(file);
-});
-
-fileInput.addEventListener("change", (e) => {
+fileInput.addEventListener("change",e=>{
   handleFileSelection(e.target.files[0]);
 });
 
-
-/* =========================
-   UPLOAD
-========================= */
-
-uploadBtn.addEventListener("click", async () => {
-  if (!selectedFile) {
-    setStatus("Please select a file first.");
+/* ================= UPLOAD ================= */
+uploadBtn.addEventListener("click",async()=>{
+  if(!selectedFile){
+    uploadStatus.textContent="Select file first";
     return;
   }
 
-  setButtonLoading(uploadBtn, true);
-  setMeetingReady(false);
   showLoader("Processing meeting...");
+  const fd=new FormData();
+  fd.append("file",selectedFile);
 
-  const formData = new FormData();
-  formData.append("file", selectedFile);
+  try{
+    const res=await fetch(`${API_BASE}/upload`,{method:"POST",body:fd});
+    if(!res.ok) throw new Error();
 
-  try {
-    const response = await fetch(`${API_BASE}/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) throw new Error("Upload failed");
-
-    const data = await response.json();
-    currentMeetingId = data.meeting_id;
-
-    // ⭐ ASK NAME AFTER UPLOAD
-    await askMeetingName();
-
-    setStatus(`✅ Uploaded & processed: ${selectedFile.name}`, "success");
-
+    const data=await res.json();
+    currentMeetingId=data.meeting_id;
+    askMeetingName();
     setMeetingReady(true);
-    notesOutput.textContent = "Ready to generate highlights.";
 
-    clearChatPlaceholder();
-
-    addMessage(
-      "✅ Meeting uploaded and processed successfully. Ask anything about it!",
-      "assistant"
-    );
-
-  } catch {
-    setStatus("❌ Upload failed.", "muted");
-  } finally {
+    notesOutput.innerHTML='<div class="empty-state">Ready to generate highlights.</div>';
+    clearChat();
+    addMessage("Meeting uploaded successfully!","assistant");
+  }catch{
+    uploadStatus.textContent="Upload failed.";
+  }finally{
     hideLoader();
-    setButtonLoading(uploadBtn, false);
   }
 });
 
-
-/* =========================
-   GENERATE NOTES
-========================= */
-
-notesBtn.addEventListener("click", async () => {
-  setButtonLoading(notesBtn, true);
+/* ================= NOTES (with line-by-line animation) ================= */
+notesBtn.addEventListener("click",async()=>{
+  if(!currentMeetingId) return;
   showLoader("Generating highlights...");
 
-  try {
-    const response = await fetch(`${API_BASE}/notes`, { method: "POST" });
-    if (!response.ok) throw new Error();
+  try{
+    const res=await fetch(`${API_BASE}/notes`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({meeting_id:currentMeetingId})
+    });
 
-    const data = await response.json();
-    notesOutput.textContent = data.notes || "No notes returned.";
+    const data=await res.json();
+    const text=data.notes||"No notes.";
 
-  } catch {
-    notesOutput.textContent = "Failed to generate notes.";
-  } finally {
+    /* Animate highlights line by line */
+    notesOutput.innerHTML="";
+    const lines=text.split("\n");
+    lines.forEach((line,i)=>{
+      if(!line.trim()) return;
+      const p=document.createElement("p");
+      p.className="highlight-line";
+      p.textContent=line;
+      p.style.animationDelay=`${i*0.06}s`;
+      notesOutput.appendChild(p);
+    });
+
+  }catch{
+    notesOutput.textContent="Failed to generate notes.";
+  }finally{
     hideLoader();
-    setButtonLoading(notesBtn, false);
   }
 });
 
-
-/* =========================
-   DOWNLOAD MODAL
-========================= */
-
-downloadBtn.addEventListener("click", () => {
-  if (!currentMeetingId) return;
-  downloadModal.classList.remove("hidden");
+/* ================= DOWNLOAD DROPDOWN ================= */
+downloadBtn.addEventListener("click",(e)=>{
+  e.stopPropagation();
+  if(!currentMeetingId) return;
+  downloadModal.classList.toggle("hidden");
 });
 
-function closeDownloadModal() {
-  downloadModal.classList.add("hidden");
-}
+/* Close dropdown on outside click */
+document.addEventListener("click",(e)=>{
+  if(downloadModal && !downloadModal.classList.contains("hidden")){
+    if(!downloadModal.contains(e.target) && e.target!==downloadBtn){
+      downloadModal.classList.add("hidden");
+    }
+  }
+});
 
-function downloadFile(format) {
-  downloadModal.classList.add("hidden");
+function closeDownloadModal(){downloadModal.classList.add("hidden")}
 
+function downloadFile(format){
+  downloadModal.classList.add("hidden");
   window.open(
     `${API_BASE}/download-notes?meeting_id=${currentMeetingId}&format=${format}`,
     "_blank"
   );
 }
 
-
-/* =========================
-   CHAT
-========================= */
-
-chatForm.addEventListener("submit", async (e) => {
+/* ================= CHAT (with typing indicator) ================= */
+chatForm.addEventListener("submit",async e=>{
   e.preventDefault();
+  const q=chatInput.value.trim();
+  if(!q||!currentMeetingId) return;
 
-  const question = chatInput.value.trim();
-  if (!question || !currentMeetingId) return;
+  addMessage(q,"user");
+  chatInput.value="";
 
-  clearChatPlaceholder();
-  addMessage(question, "user");
+  const typing=showTypingIndicator();
 
-  chatInput.value = "";
-
-  setButtonLoading(sendBtn, true);
-  showLoader("Thinking...");
-
-  const pending = addMessage("Thinking...", "assistant", { loading: true });
-
-  try {
-    const response = await fetch(`${API_BASE}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question,
-        meeting_id: currentMeetingId
-      }),
+  try{
+    const res=await fetch(`${API_BASE}/chat`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({question:q,meeting_id:currentMeetingId})
     });
-
-    if (!response.ok) throw new Error();
-
-    const data = await response.json();
-    pending.classList.remove("loading");
-    pending.textContent = data.answer || "No response.";
-
-  } catch {
-    pending.textContent = "Chat failed.";
-  } finally {
-    hideLoader();
-    setButtonLoading(sendBtn, false);
+    const data=await res.json();
+    typing.remove();
+    addMessage(data.answer||"No response","assistant");
+  }catch{
+    typing.remove();
+    addMessage("Chat failed.","assistant");
   }
 });
 
-
+/* ================= INIT ================= */
 setMeetingReady(false);
+loadHistory();
