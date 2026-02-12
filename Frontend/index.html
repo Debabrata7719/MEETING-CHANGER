@@ -7,11 +7,9 @@
 
   <title>Meeting Intelligence System</title>
 
-  <!-- styles + script -->
   <link rel="stylesheet" href="style.css">
   <script defer src="script.js"></script>
 </head>
-
 
 <body>
 
@@ -24,7 +22,6 @@
       <p id="loaderText">Processing...</p>
     </div>
   </div>
-
 
   <!-- ========================= -->
   <!-- Header -->
@@ -44,16 +41,12 @@
     </div>
   </header>
 
-
   <!-- ========================= -->
   <!-- Main Layout -->
   <!-- ========================= -->
   <main class="layout">
 
-
-    <!-- ===================================== -->
-    <!-- 🎤 LIVE RECORDING -->
-    <!-- ===================================== -->
+    <!-- 🎤 RECORDING -->
     <section class="card">
       <div class="card-header">
         <h2>Live Recording</h2>
@@ -61,56 +54,40 @@
       </div>
 
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-        <button class="btn primary" onclick="startRecording()">
-          🎤 Start Recording
-        </button>
-
-        <button class="btn" onclick="stopRecording()">
-          ⏹ Stop Recording
-        </button>
-
+        <button class="btn primary" onclick="startRecording()">🎤 Start Recording</button>
+        <button class="btn" onclick="stopRecording()">⏹ Stop Recording</button>
         <span id="recStatus" class="status muted">Status: Idle</span>
       </div>
     </section>
 
 
-
-    <!-- ===================================== -->
-    <!-- ⭐ HIGHLIGHTS (UPDATED WITH DOWNLOAD) -->
-    <!-- ===================================== -->
+    <!-- ⭐ HIGHLIGHTS -->
     <section class="card notes-card">
       <div class="card-header">
         <h2>Highlights</h2>
-        <p>Generate structured notes and download them as a PDF report.</p>
+        <p>Generate structured notes and download them.</p>
       </div>
 
-      <!-- 🔥 BUTTON ROW -->
-      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+      <div class="notes-actions">
 
-        <!-- Generate -->
-        <button class="btn" id="notesBtn" type="button" disabled>
+        <button class="btn primary" id="notesBtn" type="button" disabled>
           <span class="btn-label">Generate Highlights</span>
           <span class="btn-spinner"></span>
         </button>
 
-        <!-- Download -->
-        <button class="btn" id="downloadBtn" type="button" disabled>
-          ⬇ Download PDF
+        <button class="btn secondary" id="downloadBtn" type="button" disabled>
+          ⬇ Download
         </button>
 
       </div>
 
-      <!-- Output -->
       <div class="notes-output" id="notesOutput">
         Your highlights will appear here.
       </div>
     </section>
 
 
-
-    <!-- ===================================== -->
-    <!-- 📤 UPLOAD MEETING -->
-    <!-- ===================================== -->
+    <!-- 📤 UPLOAD -->
     <section class="card upload-card">
       <div class="card-header">
         <h2>Upload Meeting</h2>
@@ -134,10 +111,7 @@
     </section>
 
 
-
-    <!-- ===================================== -->
     <!-- 💬 CHAT -->
-    <!-- ===================================== -->
     <section class="card chat-card">
       <div class="card-header">
         <h2>Chat</h2>
@@ -159,15 +133,58 @@
           required
           disabled
         />
-
         <button class="btn primary" id="sendBtn" type="submit" disabled>
           Send
         </button>
       </form>
     </section>
 
-
   </main>
+
+
+  <!-- ========================================= -->
+  <!-- DOWNLOAD FORMAT MODAL -->
+  <!-- ========================================= -->
+  <div id="downloadModal" class="loader-overlay hidden">
+    <div class="loader-box" style="text-align:center">
+
+      <h3>Select Download Format</h3>
+
+      <div style="display:flex; gap:12px; margin-top:20px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn primary" onclick="downloadFile('pdf')">PDF</button>
+        <button class="btn" onclick="downloadFile('txt')">TXT</button>
+        <button class="btn" onclick="downloadFile('docx')">DOCX</button>
+      </div>
+
+      <button class="btn" style="margin-top:20px;" onclick="closeDownloadModal()">
+        Cancel
+      </button>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================= -->
+  <!-- ⭐ MEETING NAME MODAL -->
+  <!-- ========================================= -->
+  <div id="nameModal" class="loader-overlay hidden">
+    <div class="loader-box" style="text-align:center">
+
+      <h3>Enter Meeting Name</h3>
+
+      <input
+        id="meetingNameInput"
+        type="text"
+        placeholder="Example: Team Standup"
+        style="margin-top:15px;padding:10px;width:240px;border-radius:8px;border:1px solid #ccc;"
+      />
+
+      <div style="margin-top:20px;">
+        <button class="btn primary" onclick="submitMeetingName()">Save</button>
+      </div>
+
+    </div>
+  </div>
 
 </body>
 </html>

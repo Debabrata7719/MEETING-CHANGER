@@ -5,7 +5,7 @@ const fileInput = document.getElementById("fileInput");
 const uploadBtn = document.getElementById("uploadBtn");
 const uploadStatus = document.getElementById("uploadStatus");
 const notesBtn = document.getElementById("notesBtn");
-const downloadBtn = document.getElementById("downloadBtn"); // ⭐ NEW
+const downloadBtn = document.getElementById("downloadBtn");
 const notesOutput = document.getElementById("notesOutput");
 const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForm");
@@ -17,11 +17,10 @@ const loaderOverlay = document.getElementById("loaderOverlay");
 const loaderText = document.getElementById("loaderText");
 
 const recStatus = document.getElementById("recStatus");
+const downloadModal = document.getElementById("downloadModal");
 
 let selectedFile = null;
 let meetingReady = false;
-
-/* 🔥 active meeting id */
 let currentMeetingId = null;
 
 
@@ -58,20 +57,17 @@ function setStatus(text, type = "muted") {
   uploadStatus.className = `status ${type}`;
 }
 
-
-/* ⭐ CENTRAL CONTROL FOR BUTTONS */
 function setMeetingReady(value) {
   meetingReady = value;
 
   notesBtn.disabled = !value;
-  downloadBtn.disabled = !value;   // ⭐ enable/disable download
+  downloadBtn.disabled = !value;
   chatInput.disabled = !value;
   sendBtn.disabled = !value;
 
   apiStatus.querySelector("span:last-child").textContent =
     value ? "API: Ready" : "API: Waiting";
 }
-
 
 function addMessage(text, role, options = {}) {
   const message = document.createElement("div");
@@ -92,6 +88,34 @@ function clearChatPlaceholder() {
     first.remove();
   }
 }
+
+
+/* =====================================================
+   ASK MEETING NAME
+===================================================== */
+
+function askMeetingName() {
+  document.getElementById("nameModal").classList.remove("hidden");
+}
+
+async function submitMeetingName() {
+  const input = document.getElementById("meetingNameInput");
+  let name = input.value.trim();
+
+  if (!name) name = "Untitled Meeting";
+
+  await fetch(`${API_BASE}/set-meeting-name`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      meeting_id: currentMeetingId,
+      name: name
+    })
+  });
+
+  document.getElementById("nameModal").classList.add("hidden");
+}
+
 
 
 /* =====================================================
@@ -131,6 +155,9 @@ async function stopRecording() {
     const data = await response.json();
     currentMeetingId = data.meeting_id;
 
+    // ⭐ ASK NAME AFTER RECORDING
+    await askMeetingName();
+
     recStatus.innerHTML = `
       Status: Ready ✅ <br>
       <span style="color:#16a34a;font-weight:600;">
@@ -139,7 +166,6 @@ async function stopRecording() {
     `;
 
     setMeetingReady(true);
-
     notesOutput.textContent = "Ready to generate highlights.";
 
     clearChatPlaceholder();
@@ -158,21 +184,20 @@ async function stopRecording() {
 
 
 /* =========================
-   FILE SELECTION
+   FILE SELECT
 ========================= */
 
 function handleFileSelection(file) {
   if (!file) return;
 
   selectedFile = file;
-
   const sizeMB = (file.size / 1024 / 1024).toFixed(1);
   setStatus(`🎬 ${file.name} (${sizeMB} MB) selected`, "success");
 }
 
 
 /* =========================
-   DRAG & DROP
+   DRAG DROP
 ========================= */
 
 ["dragenter", "dragover"].forEach((eventName) => {
@@ -228,6 +253,9 @@ uploadBtn.addEventListener("click", async () => {
     const data = await response.json();
     currentMeetingId = data.meeting_id;
 
+    // ⭐ ASK NAME AFTER UPLOAD
+    await askMeetingName();
+
     setStatus(`✅ Uploaded & processed: ${selectedFile.name}`, "success");
 
     setMeetingReady(true);
@@ -250,7 +278,7 @@ uploadBtn.addEventListener("click", async () => {
 
 
 /* =========================
-   NOTES (Generate Highlights)
+   GENERATE NOTES
 ========================= */
 
 notesBtn.addEventListener("click", async () => {
@@ -258,14 +286,10 @@ notesBtn.addEventListener("click", async () => {
   showLoader("Generating highlights...");
 
   try {
-    const response = await fetch(`${API_BASE}/notes`, {
-      method: "POST",
-    });
-
+    const response = await fetch(`${API_BASE}/notes`, { method: "POST" });
     if (!response.ok) throw new Error();
 
     const data = await response.json();
-
     notesOutput.textContent = data.notes || "No notes returned.";
 
   } catch {
@@ -278,17 +302,26 @@ notesBtn.addEventListener("click", async () => {
 
 
 /* =========================
-   ⭐ DOWNLOAD PDF
+   DOWNLOAD MODAL
 ========================= */
 
 downloadBtn.addEventListener("click", () => {
   if (!currentMeetingId) return;
+  downloadModal.classList.remove("hidden");
+});
+
+function closeDownloadModal() {
+  downloadModal.classList.add("hidden");
+}
+
+function downloadFile(format) {
+  downloadModal.classList.add("hidden");
 
   window.open(
-    `${API_BASE}/download-notes?meeting_id=${currentMeetingId}`,
+    `${API_BASE}/download-notes?meeting_id=${currentMeetingId}&format=${format}`,
     "_blank"
   );
-});
+}
 
 
 /* =========================
@@ -324,7 +357,6 @@ chatForm.addEventListener("submit", async (e) => {
     if (!response.ok) throw new Error();
 
     const data = await response.json();
-
     pending.classList.remove("loading");
     pending.textContent = data.answer || "No response.";
 

@@ -28,3 +28,4 @@ python-dotenv
 
 # Export (PDF highlights)
 reportlab
+python-docx
