@@ -17,7 +17,7 @@ def extract_highlights(meeting_id: str):
         model_name="all-MiniLM-L6-v2"
     )
 
-    #  LOAD MEETING-SPECIFIC DB
+    # ========= LOAD MEETING-SPECIFIC DB =========
     db_path = os.path.join("data", "vectordb", meeting_id)
 
     db = Chroma(
@@ -26,23 +26,28 @@ def extract_highlights(meeting_id: str):
         collection_name="meeting_chunks"
     )
 
-    retriever = db.as_retriever(search_kwargs={"k": 5})
+    retriever = db.as_retriever(search_kwargs={"k": 6})
 
-    # ========= Queries =========
+    # ========= Queries (Improved) =========
     queries = [
         "important topics discussed",
-        "decisions made in the meeting",
-        "action items and tasks assigned",
-        "deadlines or plans"
+        "key decisions made",
+        "tasks assigned or action items",
+        "deadlines or commitments",
+        "critical points or conclusions"
     ]
 
     chunks = []
 
     for q in queries:
         docs = retriever.invoke(q)
-        chunks.extend([d.page_content for d in docs])
+        chunks.extend([d.page_content.strip() for d in docs])
 
-    context = "\n\n".join(chunks)
+    # ========= Remove duplicate chunks =========
+    unique_chunks = list(dict.fromkeys(chunks))
+
+    # ========= Limit context size =========
+    context = "\n\n".join(unique_chunks[:12])
 
     # ========= LLM =========
     llm = ChatGroq(
@@ -50,15 +55,23 @@ def extract_highlights(meeting_id: str):
         temperature=0
     )
 
+    # ========= Prompt (Upgraded Intelligence) =========
     prompt = ChatPromptTemplate.from_template("""
-Extract clean meeting highlights from the text.
+You are an expert meeting analyst.
 
-Return:
-• Key Topics
-• Decisions
-• Action Items
+Extract only the MOST IMPORTANT highlights.
 
-Text:
+Rules:
+- Only include decisions, action items, deadlines, or key conclusions
+- Ignore filler conversation or casual talk
+- Each highlight must be one concise sentence
+- Do NOT repeat similar points
+- Maximum 8 highlights
+
+Format:
+• Highlight
+
+Meeting Text:
 {text}
 """)
 
