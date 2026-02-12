@@ -210,77 +210,160 @@ async def chat(payload: ChatRequest):
         traceback.print_exc()
         raise HTTPException(500, "Chat failed")
 
-#For downloaf highlight 
+
+
+
+#download notes
+# ==============================
+# Download Highlights
+# ==============================
+
+from fastapi.responses import FileResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from docx import Document
+import os
+import json
+
+
 @app.get("/download-notes")
-def download_notes(meeting_id: str):
+def download_notes(meeting_id: str, format: str = "pdf"):
+
+    # =========================
+    # Load Meeting Name
+    # =========================
+
+    meeting_name = meeting_id
+
+    mapping_file = "data/meetings.json"
+
+    if os.path.exists(mapping_file):
+        with open(mapping_file) as f:
+            db = json.load(f)
+            meeting_name = db.get(meeting_id, meeting_id)
+
+    # remove unsafe filename characters
+    meeting_name = "".join(
+        c for c in meeting_name if c.isalnum() or c in (" ", "-", "_")
+    ).strip()
+
+    # =========================
+    # Load highlights text
+    # =========================
 
     txt_path = f"Notes/highlights_{meeting_id}.txt"
 
     if not os.path.exists(txt_path):
-        return {"error": "Highlights not generated yet. Click Generate first."}
+        return {"error": "Highlights not generated yet."}
 
-    # =========================
-    # Read highlights text
-    # =========================
     with open(txt_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    pdf_path = f"Notes/highlights_{meeting_id}.pdf"
+    # ======================================================
+    # ================= PDF DOWNLOAD =======================
+    # ======================================================
 
-    # =========================
-    # Create styled PDF
-    # =========================
-    doc = SimpleDocTemplate(pdf_path)
+    if format == "pdf":
 
-    styles = getSampleStyleSheet()
+        pdf_path = f"Notes/{meeting_name}.pdf"
 
-    title_style = styles["Heading1"]
-    heading_style = styles["Heading2"]
-    body_style = styles["BodyText"]
+        doc = SimpleDocTemplate(pdf_path)
+        styles = getSampleStyleSheet()
+        elements = []
 
-    elements = []
+        elements.append(Paragraph("Meeting Highlights", styles["Heading1"]))
+        elements.append(Spacer(1, 20))
 
-    # ⭐ Big Title
-    elements.append(Paragraph("Meeting Highlights Report", title_style))
-    elements.append(Spacer(1, 20))
+        elements.append(Paragraph(f"Meeting: {meeting_name}", styles["Normal"]))
+        elements.append(Spacer(1, 20))
 
-    # ⭐ Metadata
-    date_now = datetime.now().strftime("%d %b %Y %H:%M")
-    elements.append(Paragraph(f"<b>Meeting ID:</b> {meeting_id}", body_style))
-    elements.append(Paragraph(f"<b>Generated:</b> {date_now}", body_style))
-    elements.append(Spacer(1, 25))
-
-
-    # =========================
-    # Format content nicely
-    # =========================
-    for line in text.split("\n"):
-
-        clean = line.strip()
-
-        if not clean:
-            elements.append(Spacer(1, 8))
-            continue
-
-        # detect section headings
-        if "Key Topics" in clean or "Decisions" in clean or "Action Items" in clean:
-            elements.append(Spacer(1, 14))
-            elements.append(Paragraph(clean.replace("*", ""), heading_style))
+        for line in text.split("\n"):
+            elements.append(Paragraph(line, styles["BodyText"]))
             elements.append(Spacer(1, 8))
 
-        # bullets
-        elif clean.startswith("-") or clean.startswith("•"):
-            bullet = f"• {clean.lstrip('-• ')}"
-            elements.append(Paragraph(bullet, body_style))
+        doc.build(elements)
 
-        # numbered items
-        else:
-            elements.append(Paragraph(clean, body_style))
+        return FileResponse(
+            pdf_path,
+            media_type="application/pdf",
+            filename=f"{meeting_name}.pdf"
+        )
 
-    doc.build(elements)
 
-    return FileResponse(
-        pdf_path,
-        media_type="application/pdf",
-        filename=f"highlights_{meeting_id}.pdf"
-    )
+
+    # ======================================================
+    # ================= TXT DOWNLOAD =======================
+    # ======================================================
+
+    elif format == "txt":
+
+        return FileResponse(
+            txt_path,
+            media_type="text/plain",
+            filename=f"{meeting_name}.txt"
+        )
+
+
+
+    # ======================================================
+    # ================= DOCX DOWNLOAD ======================
+    # ======================================================
+
+    elif format == "docx":
+
+        docx_path = f"Notes/{meeting_name}.docx"
+
+        document = Document()
+        document.add_heading("Meeting Highlights", 0)
+        document.add_paragraph(f"Meeting: {meeting_name}")
+        document.add_paragraph("")
+
+        for line in text.split("\n"):
+            document.add_paragraph(line)
+
+        document.save(docx_path)
+
+        return FileResponse(
+            docx_path,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            filename=f"{meeting_name}.docx"
+        )
+
+
+
+    # ======================================================
+    # ================= INVALID FORMAT =====================
+    # ======================================================
+
+    else:
+        return {"error": "Invalid format"}
+
+
+
+#For set meeting name by user
+class MeetingName(BaseModel):
+    meeting_id: str
+    name: str
+
+
+@app.post("/set-meeting-name")
+def set_meeting_name(data: MeetingName):
+
+    meeting_id = data.meeting_id
+    name = data.name
+
+    os.makedirs("data", exist_ok=True)
+    file = "data/meetings.json"
+
+    if os.path.exists(file):
+        with open(file) as f:
+            db = json.load(f)
+    else:
+        db = {}
+
+    db[meeting_id] = name
+
+    with open(file, "w") as f:
+        json.dump(db, f, indent=2)
+
+    return {"status": "saved"}
