@@ -9,6 +9,11 @@ Turn meetings into searchable knowledge with AI-powered transcription, highlight
 The **Meeting Intelligence System** is an end-to-end AI application that converts meeting recordings into structured insights. It allows users to upload or record meetings, automatically transcribe them, generate highlights, and ask questions about the meeting content using an intelligent chat assistant.
 
 This project demonstrates a production-style architecture using modern LLM pipelines, vector databases, and retrieval-augmented generation.
+<p align="center">
+  <img src="assets/Screenshot 2026-02-12 223029.png" width="900">
+</p>
+
+<p align="center"><b>Meeting Intelligence Dashboard</b></p>
 
 <p align="center">
   <img src="assets/Screenshot 2026-02-12 223029.png" width="900">
