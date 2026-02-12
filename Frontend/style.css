@@ -1,13 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
+/* =================================================
+   VARIABLES
+================================================= */
+
 :root {
   --bg-1: #f7f1e5;
   --bg-2: #e2f1ea;
+
   --card: #ffffff;
   --text: #1c2d2b;
   --muted: #5c6f6a;
+
   --accent: #1f8a70;
   --accent-2: #f4a261;
+
   --border: #dfe7e2;
   --shadow: 0 20px 45px rgba(17, 31, 27, 0.12);
 }
@@ -16,6 +23,11 @@
   box-sizing: border-box;
 }
 
+
+/* =================================================
+   BODY
+================================================= */
+
 body {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
@@ -23,13 +35,12 @@ body {
   background: linear-gradient(140deg, var(--bg-1), var(--bg-2));
   min-height: 100vh;
   padding: 32px clamp(16px, 4vw, 48px) 64px;
-  overflow-x: hidden;
 }
 
 
-/* =========================
+/* =================================================
    HEADINGS
-   ========================= */
+================================================= */
 
 h1, h2 {
   font-family: "Fraunces", serif;
@@ -38,9 +49,9 @@ h1, h2 {
 }
 
 
-/* =========================
-   TOPBAR
-   ========================= */
+/* =================================================
+   HEADER / TOPBAR
+================================================= */
 
 .topbar {
   display: flex;
@@ -56,20 +67,38 @@ h1, h2 {
   padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.9);
+  background: white;
   box-shadow: var(--shadow);
 }
 
 
-/* =========================
-   LAYOUT
-   ========================= */
+/* =================================================
+   🔥 PERFECT GRID LAYOUT
+================================================= */
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) 1fr;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: auto 1fr;
   gap: 24px;
 }
+
+/* LEFT SIDE */
+.layout > section:nth-child(1) { grid-column: 1; grid-row: 1; }
+.layout > section:nth-child(3) { grid-column: 1; grid-row: 2; }
+
+/* RIGHT SIDE */
+.layout > section:nth-child(2) { grid-column: 2; grid-row: 1; }
+
+.chat-card {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+
+/* =================================================
+   CARDS
+================================================= */
 
 .card {
   background: var(--card);
@@ -82,9 +111,62 @@ h1, h2 {
 }
 
 
-/* =========================
-   UPLOAD
-   ========================= */
+/* =================================================
+   BUTTONS
+================================================= */
+
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* Primary */
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), #2b9e85);
+  color: white;
+}
+
+/* 🔥 NEW — secondary style (Download button) */
+.btn.secondary {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn.secondary:hover {
+  background: #f3f7f6;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* =================================================
+   🔥 NEW — HIGHLIGHTS BUTTON ROW
+================================================= */
+
+.notes-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+
+/* =================================================
+   DROPZONE
+================================================= */
 
 .dropzone {
   border: 2px dashed #bcd6ce;
@@ -102,38 +184,9 @@ h1, h2 {
 }
 
 
-/* =========================
-   BUTTONS
-   ========================= */
-
-.btn {
-  border: none;
-  border-radius: 14px;
-  padding: 12px 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn.primary {
-  background: linear-gradient(135deg, var(--accent), #2b9e85);
-  color: white;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-
-/* =========================
-   🔥 RECORDING CARD STYLES (NEW)
-   ========================= */
+/* =================================================
+   RECORDING STATUS
+================================================= */
 
 #recStatus {
   font-weight: 600;
@@ -141,42 +194,34 @@ h1, h2 {
   margin-left: 8px;
 }
 
-#recStatus.recording {
-  color: #d62828;
-}
-
-#recStatus.processing {
-  color: var(--accent-2);
-}
-
-#recStatus.ready {
-  color: var(--accent);
-}
+#recStatus.recording { color: #d62828; }
+#recStatus.processing { color: var(--accent-2); }
+#recStatus.ready { color: var(--accent); }
 
 
-/* =========================
-   NOTES
-   ========================= */
+/* =================================================
+   HIGHLIGHTS BOX
+================================================= */
 
 .notes-output {
   border-radius: 12px;
   border: 1px solid var(--border);
   padding: 14px;
-  min-height: 160px;
+  min-height: 180px;
   background: #f9fbfa;
   white-space: pre-line;
 }
 
 
-/* =========================
-   CHAT MESSAGES
-   ========================= */
+/* =================================================
+   CHAT
+================================================= */
 
 .chat-messages {
   border-radius: 16px;
   border: 1px solid var(--border);
   padding: 16px;
-  height: 420px;
+  height: 460px;
   overflow-y: auto;
   background: #f7faf8;
   display: flex;
@@ -204,51 +249,42 @@ h1, h2 {
 }
 
 
-/* =========================
+/* =================================================
    CHAT INPUT
-   ========================= */
+================================================= */
 
 .chat-input {
   display: flex;
   align-items: center;
   gap: 10px;
-
-  width: 100%;
   padding: 10px;
-
   border-radius: 18px;
   background: white;
   border: 1px solid var(--border);
-
-  box-shadow: 0 8px 20px rgba(17,31,27,0.08);
 }
 
 .chat-input input {
   flex: 1;
-  min-width: 0;
   border: none;
   outline: none;
   font-size: 1rem;
   padding: 10px 12px;
-  background: transparent;
 }
 
 .chat-input .btn {
-  flex-shrink: 0;
   width: 90px;
   height: 42px;
 }
 
 
-/* =========================
-   FULLSCREEN LOADER
-   ========================= */
+/* =================================================
+   LOADER
+================================================= */
 
 .loader-overlay {
   position: fixed;
   inset: 0;
   background: rgba(15,25,22,0.6);
-  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -279,12 +315,18 @@ h1, h2 {
 }
 
 
-/* =========================
+/* =================================================
    RESPONSIVE
-   ========================= */
+================================================= */
 
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .layout section {
+    grid-column: auto !important;
+    grid-row: auto !important;
   }
 }

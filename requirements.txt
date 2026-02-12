@@ -1,7 +1,8 @@
 # FastAPI server
-fastapi
-uvicorn[standard]
+fastapi>=0.110
+uvicorn[standard]>=0.29
 python-multipart
+pydantic
 
 # Core AI
 openai-whisper
@@ -9,7 +10,7 @@ sentence-transformers
 numpy
 scipy
 
-# Audio recording
+# Audio
 sounddevice
 ffmpeg-python
 soundfile
@@ -24,3 +25,6 @@ langchain-chroma
 
 # Config
 python-dotenv
+
+# Export (PDF highlights)
+reportlab

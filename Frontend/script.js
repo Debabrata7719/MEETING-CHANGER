@@ -5,6 +5,7 @@ const fileInput = document.getElementById("fileInput");
 const uploadBtn = document.getElementById("uploadBtn");
 const uploadStatus = document.getElementById("uploadStatus");
 const notesBtn = document.getElementById("notesBtn");
+const downloadBtn = document.getElementById("downloadBtn"); // ⭐ NEW
 const notesOutput = document.getElementById("notesOutput");
 const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForm");
@@ -26,7 +27,7 @@ let currentMeetingId = null;
 
 /* =========================
    LOADER
-   ========================= */
+========================= */
 
 function showLoader(text = "Processing...") {
   loaderText.textContent = text;
@@ -40,7 +41,7 @@ function hideLoader() {
 
 /* =========================
    UI HELPERS
-   ========================= */
+========================= */
 
 function setButtonLoading(button, loading) {
   if (loading) {
@@ -57,16 +58,20 @@ function setStatus(text, type = "muted") {
   uploadStatus.className = `status ${type}`;
 }
 
+
+/* ⭐ CENTRAL CONTROL FOR BUTTONS */
 function setMeetingReady(value) {
   meetingReady = value;
 
   notesBtn.disabled = !value;
+  downloadBtn.disabled = !value;   // ⭐ enable/disable download
   chatInput.disabled = !value;
   sendBtn.disabled = !value;
 
   apiStatus.querySelector("span:last-child").textContent =
     value ? "API: Ready" : "API: Waiting";
 }
+
 
 function addMessage(text, role, options = {}) {
   const message = document.createElement("div");
@@ -91,7 +96,7 @@ function clearChatPlaceholder() {
 
 /* =====================================================
    RECORDING
-   ===================================================== */
+===================================================== */
 
 async function startRecording() {
   try {
@@ -126,7 +131,6 @@ async function stopRecording() {
     const data = await response.json();
     currentMeetingId = data.meeting_id;
 
-    // 🔥 SUCCESS UNDER LIVE RECORDING
     recStatus.innerHTML = `
       Status: Ready ✅ <br>
       <span style="color:#16a34a;font-weight:600;">
@@ -153,10 +157,9 @@ async function stopRecording() {
 }
 
 
-
 /* =========================
    FILE SELECTION
-   ========================= */
+========================= */
 
 function handleFileSelection(file) {
   if (!file) return;
@@ -164,14 +167,13 @@ function handleFileSelection(file) {
   selectedFile = file;
 
   const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-
   setStatus(`🎬 ${file.name} (${sizeMB} MB) selected`, "success");
 }
 
 
 /* =========================
    DRAG & DROP
-   ========================= */
+========================= */
 
 ["dragenter", "dragover"].forEach((eventName) => {
   dropZone.addEventListener(eventName, (e) => {
@@ -200,7 +202,7 @@ fileInput.addEventListener("change", (e) => {
 
 /* =========================
    UPLOAD
-   ========================= */
+========================= */
 
 uploadBtn.addEventListener("click", async () => {
   if (!selectedFile) {
@@ -248,8 +250,8 @@ uploadBtn.addEventListener("click", async () => {
 
 
 /* =========================
-   NOTES
-   ========================= */
+   NOTES (Generate Highlights)
+========================= */
 
 notesBtn.addEventListener("click", async () => {
   setButtonLoading(notesBtn, true);
@@ -276,8 +278,22 @@ notesBtn.addEventListener("click", async () => {
 
 
 /* =========================
+   ⭐ DOWNLOAD PDF
+========================= */
+
+downloadBtn.addEventListener("click", () => {
+  if (!currentMeetingId) return;
+
+  window.open(
+    `${API_BASE}/download-notes?meeting_id=${currentMeetingId}`,
+    "_blank"
+  );
+});
+
+
+/* =========================
    CHAT
-   ========================= */
+========================= */
 
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();

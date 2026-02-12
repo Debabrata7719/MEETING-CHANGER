@@ -1,13 +1,17 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Meeting Intelligence System</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <!-- styles + script -->
+  <link rel="stylesheet" href="style.css">
   <script defer src="script.js"></script>
 </head>
+
 
 <body>
 
@@ -20,12 +24,6 @@
       <p id="loaderText">Processing...</p>
     </div>
   </div>
-
-
-  <!-- Background visuals -->
-  <div class="bg-orb orb-1"></div>
-  <div class="bg-orb orb-2"></div>
-  <div class="bg-grid"></div>
 
 
   <!-- ========================= -->
@@ -54,7 +52,7 @@
 
 
     <!-- ===================================== -->
-    <!-- 🔥 LIVE RECORDING CARD (NEW) -->
+    <!-- 🎤 LIVE RECORDING -->
     <!-- ===================================== -->
     <section class="card">
       <div class="card-header">
@@ -74,12 +72,45 @@
         <span id="recStatus" class="status muted">Status: Idle</span>
       </div>
     </section>
+
+
+
     <!-- ===================================== -->
+    <!-- ⭐ HIGHLIGHTS (UPDATED WITH DOWNLOAD) -->
+    <!-- ===================================== -->
+    <section class="card notes-card">
+      <div class="card-header">
+        <h2>Highlights</h2>
+        <p>Generate structured notes and download them as a PDF report.</p>
+      </div>
+
+      <!-- 🔥 BUTTON ROW -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+
+        <!-- Generate -->
+        <button class="btn" id="notesBtn" type="button" disabled>
+          <span class="btn-label">Generate Highlights</span>
+          <span class="btn-spinner"></span>
+        </button>
+
+        <!-- Download -->
+        <button class="btn" id="downloadBtn" type="button" disabled>
+          ⬇ Download PDF
+        </button>
+
+      </div>
+
+      <!-- Output -->
+      <div class="notes-output" id="notesOutput">
+        Your highlights will appear here.
+      </div>
+    </section>
 
 
-    <!-- ========================= -->
-    <!-- Upload Meeting -->
-    <!-- ========================= -->
+
+    <!-- ===================================== -->
+    <!-- 📤 UPLOAD MEETING -->
+    <!-- ===================================== -->
     <section class="card upload-card">
       <div class="card-header">
         <h2>Upload Meeting</h2>
@@ -103,29 +134,10 @@
     </section>
 
 
-    <!-- ========================= -->
-    <!-- Highlights -->
-    <!-- ========================= -->
-    <section class="card notes-card">
-      <div class="card-header">
-        <h2>Highlights</h2>
-        <p>Generate structured notes from the meeting.</p>
-      </div>
 
-      <button class="btn" id="notesBtn" type="button" disabled>
-        <span class="btn-label">Generate Highlights</span>
-        <span class="btn-spinner"></span>
-      </button>
-
-      <div class="notes-output" id="notesOutput">
-        Your highlights will appear here.
-      </div>
-    </section>
-
-
-    <!-- ========================= -->
-    <!-- Chat -->
-    <!-- ========================= -->
+    <!-- ===================================== -->
+    <!-- 💬 CHAT -->
+    <!-- ===================================== -->
     <section class="card chat-card">
       <div class="card-header">
         <h2>Chat</h2>
@@ -149,8 +161,7 @@
         />
 
         <button class="btn primary" id="sendBtn" type="submit" disabled>
-          <span class="btn-label">Send</span>
-          <span class="btn-spinner"></span>
+          Send
         </button>
       </form>
     </section>

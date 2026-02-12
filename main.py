@@ -14,6 +14,15 @@ from starlette.concurrency import run_in_threadpool
 
 from src.recorder import start_recording, stop_recording
 
+from fastapi.responses import FileResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+import os
+from datetime import datetime
+
+
+
 
 # ===============================
 # Load services ONLY ONCE
@@ -200,3 +209,78 @@ async def chat(payload: ChatRequest):
     except Exception:
         traceback.print_exc()
         raise HTTPException(500, "Chat failed")
+
+#For downloaf highlight 
+@app.get("/download-notes")
+def download_notes(meeting_id: str):
+
+    txt_path = f"Notes/highlights_{meeting_id}.txt"
+
+    if not os.path.exists(txt_path):
+        return {"error": "Highlights not generated yet. Click Generate first."}
+
+    # =========================
+    # Read highlights text
+    # =========================
+    with open(txt_path, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    pdf_path = f"Notes/highlights_{meeting_id}.pdf"
+
+    # =========================
+    # Create styled PDF
+    # =========================
+    doc = SimpleDocTemplate(pdf_path)
+
+    styles = getSampleStyleSheet()
+
+    title_style = styles["Heading1"]
+    heading_style = styles["Heading2"]
+    body_style = styles["BodyText"]
+
+    elements = []
+
+    # ⭐ Big Title
+    elements.append(Paragraph("Meeting Highlights Report", title_style))
+    elements.append(Spacer(1, 20))
+
+    # ⭐ Metadata
+    date_now = datetime.now().strftime("%d %b %Y %H:%M")
+    elements.append(Paragraph(f"<b>Meeting ID:</b> {meeting_id}", body_style))
+    elements.append(Paragraph(f"<b>Generated:</b> {date_now}", body_style))
+    elements.append(Spacer(1, 25))
+
+
+    # =========================
+    # Format content nicely
+    # =========================
+    for line in text.split("\n"):
+
+        clean = line.strip()
+
+        if not clean:
+            elements.append(Spacer(1, 8))
+            continue
+
+        # detect section headings
+        if "Key Topics" in clean or "Decisions" in clean or "Action Items" in clean:
+            elements.append(Spacer(1, 14))
+            elements.append(Paragraph(clean.replace("*", ""), heading_style))
+            elements.append(Spacer(1, 8))
+
+        # bullets
+        elif clean.startswith("-") or clean.startswith("•"):
+            bullet = f"• {clean.lstrip('-• ')}"
+            elements.append(Paragraph(bullet, body_style))
+
+        # numbered items
+        else:
+            elements.append(Paragraph(clean, body_style))
+
+    doc.build(elements)
+
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        filename=f"highlights_{meeting_id}.pdf"
+    )
