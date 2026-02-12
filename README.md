@@ -15,10 +15,6 @@ This project demonstrates a production-style architecture using modern LLM pipel
 
 <p align="center"><b>Meeting Intelligence Dashboard</b></p>
 
-<p align="center">
-  <img src="assets/Screenshot 2026-02-12 223029.png" width="900">
-</p>
-
 
 ## Features
 
