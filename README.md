@@ -11,7 +11,7 @@ The **Meeting Intelligence System** is an end-to-end AI application that convert
 This project demonstrates a production-style architecture using modern LLM pipelines, vector databases, and retrieval-augmented generation.
 
 <p align="center">
-  <img src="assets/ui.png" width="900">
+  <img src="assets/Screenshot 2026-02-12 223029.png" width="900">
 </p>
 
 
